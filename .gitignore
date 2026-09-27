@@ -4,3 +4,6 @@ dist/
 apps/backend/data/*.db*
 apps/backend/data/selftest.db*
 *.log
+
+# local key material, never commit
+**/secrets/
