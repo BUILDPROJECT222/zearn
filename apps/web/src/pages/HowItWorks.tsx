@@ -1,6 +1,7 @@
 import type { Data } from '../App';
 import Pipeline from '../components/Pipeline';
 import FAQ from '../components/FAQ';
+import FlowDiagram from '../components/FlowDiagram';
 
 export default function HowItWorksPage({ d }: { d: Data }) {
   const { s } = d;
@@ -11,6 +12,12 @@ export default function HowItWorksPage({ d }: { d: Data }) {
       <h1 className="title">From trade to floor <em>in five steps.</em></h1>
       <p className="lead">No trading desk, no yield farming, no APY promises. Fees in, ZEC out, split between a hard floor and hold rewards.</p>
       <Pipeline s={s} />
+
+      <div className="gap-lg" />
+      <div className="eyebrow">Full flow</div>
+      <h2 className="title" style={{ fontSize: 28 }}>Fees in, ZEC out, three loops.</h2>
+      <div className="gap" />
+      <FlowDiagram s={s} />
 
       <div className="gap-lg" />
       <div className="three">
