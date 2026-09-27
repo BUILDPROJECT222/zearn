@@ -65,6 +65,21 @@ npm run seed:dev --prefix apps/backend # optional: fake sweeps so the dashboard 
 5. Test live with small amounts: one sweep, one redeem to SOL, one redeem to a t-addr, one claim.
 6. Set `DRY_RUN=false`, deploy the backend (VPS) and the web app (Vercel/Netlify with `VITE_API_URL`).
 
+## Deploy (Railway)
+
+One service runs everything: the backend serves the API under `/api` and the built web app at `/` (same origin, so `VITE_API_URL` stays empty in production). `Dockerfile` + `railway.json` are picked up automatically.
+
+```bash
+railway init -n zearn && railway add --service zearn
+railway variables --service zearn --set DRY_RUN=true --set PORT=8787 --set ZEARN_MINT=<mint> --set DB_PATH=/data/zearn.db
+railway up --service zearn --detach
+railway domain --service zearn
+```
+
+Live: https://zearn-production.up.railway.app (dry run, test mint).
+
+Before going live on Railway: attach a **volume mounted at `/data`** (SQLite ledger must survive redeploys), set `VAULT_SOL_SECRET`, `NEAR_ACCOUNT_ID`, `NEAR_PRIVATE_KEY`, a Helius-class `SOLANA_RPC_URL`, optionally `ONECLICK_API_KEY`, then flip `DRY_RUN=false`.
+
 ## Do we need to deploy a program / smart contract?
 
 **v1: no.** Nothing is deployed on-chain by us.
