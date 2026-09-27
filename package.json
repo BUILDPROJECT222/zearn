@@ -1,0 +1,11 @@
+{
+  "name": "zearn",
+  "private": true,
+  "scripts": {
+    "install:all": "npm install --prefix apps/backend && npm install --prefix apps/web",
+    "dev:backend": "npm run dev --prefix apps/backend",
+    "dev:web": "npm run dev --prefix apps/web",
+    "build": "npm run build --prefix apps/backend && npm run build --prefix apps/web",
+    "typecheck": "npm run typecheck --prefix apps/backend && npm run typecheck --prefix apps/web"
+  }
+}

@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ZFLOOR Calculator</title>
+<style>
+  :root{--bg:#f7f7f2;--card:#fff;--ink:#16181d;--ink2:#5b6070;--line:#e3e3db;--acc:#e8a317;--acc2:#1f7a4d;--bad:#b3261e}
+  @media (prefers-color-scheme: dark){:root{--bg:#101217;--card:#171a21;--ink:#eceef3;--ink2:#9aa1b2;--line:#262a33;--acc:#f4b942;--acc2:#4cc38a;--bad:#ff6b61}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  .wrap{max-width:1180px;margin:0 auto;padding:20px 16px 60px}
+  h1{font-size:22px;margin:0 0 4px}
+  h2{font-size:16px;margin:0 0 12px}
+  .sub{color:var(--ink2);margin:0 0 18px}
+  .grid{display:grid;grid-template-columns:340px 1fr;gap:16px}
+  @media (max-width:860px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+  label{display:block;font-size:12px;color:var(--ink2);margin:10px 0 4px}
+  input,textarea,select{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+  textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;min-height:64px}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  @media (max-width:600px){.kpis{grid-template-columns:repeat(2,1fr)}}
+  .kpi{border:1px solid var(--line);border-radius:10px;padding:10px}
+  .kpi .v{font-size:18px;font-weight:600}
+  .kpi .l{font-size:11px;color:var(--ink2)}
+  .tbl{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;font-size:12px;font-variant-numeric:tabular-nums}
+  th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+  th:first-child,td:first-child{text-align:left}
+  th{color:var(--ink2);font-weight:500}
+  .good{color:var(--acc2);font-weight:600}.bad{color:var(--bad);font-weight:600}
+  .btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  button{padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);cursor:pointer;font:inherit}
+  button.on{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 18%,transparent)}
+  .note{font-size:12px;color:var(--ink2)}
+  .bar{height:8px;border-radius:6px;background:var(--line);overflow:hidden;margin-top:6px}
+  .bar>div{height:100%;background:var(--acc)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>ZFLOOR Calculator</h1>
+  <p class="sub">Creator fee pump.fun → ZEC via NEAR Intents → <b>Floor Vault</b> (burn-to-redeem) + <b>Hold Pool</b> (vesting berdasarkan durasi hold). Simulasi per jam.</p>
+
+  <div class="grid">
+    <div>
+      <div class="card">
+        <h2>Harga &amp; token</h2>
+        <div class="row2">
+          <div><label>Harga SOL (USD)</label><input id="sol" type="number" value="121.73" step="0.01"></div>
+          <div><label>Harga ZEC (USD)</label><input id="zec" type="number" value="1585.89" step="0.01"></div>
+        </div>
+        <label>Total supply token</label><input id="supply" type="number" value="1000000000">
+      </div>
+
+      <div class="card">
+        <h2>Volume &amp; market cap per jam</h2>
+        <div class="btns" id="scen">
+          <button data-k="0.5">Low ×0,5</button><button data-k="1" class="on">Mid ×1</button><button data-k="2">High ×2</button>
+        </div>
+        <label>Volume per jam (USD), dipisah koma. Jam 1 = bonding curve</label>
+        <textarea id="vol">158400,126700,95000,73900,116100,168900,221700,200600,158400,116100,95000,126700,179500,242800,211100,158400,116100,95000,126700,168900,211100,179500,137200,116100</textarea>
+        <label>Market cap per jam (USD), untuk menentukan tier creator fee</label>
+        <textarea id="mc">60000,80000,65000,55000,90000,150000,220000,180000,140000,110000,95000,130000,200000,300000,260000,190000,150000,130000,160000,210000,180000,150000,130000,120000</textarea>
+        <label><input id="bond1" type="checkbox" checked style="width:auto"> Jam 1 masih bonding curve (creator fee 0,30%)</label>
+      </div>
+
+      <div class="card">
+        <h2>Parameter protokol</h2>
+        <div class="row2">
+          <div><label>Fee ke treasury (%)</label><input id="treas" type="number" value="90" step="1"></div>
+          <div><label>Split ke Floor Vault (%)</label><input id="split" type="number" value="50" step="1"></div>
+          <div><label>Biaya swap SOL→ZEC (%)</label><input id="swap" type="number" value="0.3" step="0.05"></div>
+          <div><label>Redeem fee (%)</label><input id="rfee" type="number" value="2" step="0.1"></div>
+          <div><label>Eligible supply (%)</label><input id="elig" type="number" value="70" step="1"></div>
+          <div><label>Buy+sell fee total (%)</label><input id="rt" type="number" value="2.4" step="0.1"></div>
+        </div>
+        <label>Kurva vesting: jam:unlock% (dipisah koma)</label>
+        <input id="vest" value="0.25:5, 0.5:10, 1:20, 2:35, 4:60, 6:80, 8:100">
+        <p class="note">Eligible supply = token di wallet holder (di luar bonding curve, pool AMM, dan program).</p>
+      </div>
+
+      <div class="card">
+        <h2>Contoh holder</h2>
+        <div class="row2">
+          <div><label>Posisi (USD)</label><input id="pos" type="number" value="2000"></div>
+          <div><label>Masuk di jam ke-</label><input id="entry" type="number" value="2" min="1" max="24"></div>
+        </div>
+        <label>Durasi hold (jam, boleh desimal: 0,25 = 15 menit)</label>
+        <input id="hold" type="number" value="8" step="0.25">
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <h2>Ringkasan</h2>
+        <div class="kpis" id="kpis"></div>
+      </div>
+      <div class="card">
+        <h2>Holder: vesting &amp; klaim</h2>
+        <div id="holder"></div>
+      </div>
+      <div class="card">
+        <h2>Redeem &amp; arbitrase floor</h2>
+        <div class="row2">
+          <div><label>Harga market (MC, USD) sekarang</label><input id="mkt" type="number" value="10000"></div>
+          <div><label>Floor diambil dari jam ke-</label><input id="fh" type="number" value="24" min="1" max="24"></div>
+        </div>
+        <div id="arb" style="margin-top:10px"></div>
+      </div>
+      <div class="card">
+        <h2>Simulasi per jam</h2>
+        <div class="tbl"><table id="tbl"></table></div>
+      </div>
+    </div>
+  </div>
+  <p class="note">Tier creator fee PumpSwap mengikuti pump.fun/docs/fees (update 20 Mei 2026). Harga SOL/ZEC default diambil 27 Sep 2026. Asumsi, bukan janji return.</p>
+</div>
+
+<script>
+const TIERS=[[420,0.30],[1470,0.95],[2460,0.90],[3440,0.85],[4420,0.80],[9820,0.75],[14740,0.70],[19650,0.65],[24560,0.60],[29470,0.55],[34380,0.50],[39300,0.45],[44210,0.40],[49120,0.35],[54030,0.30],[58940,0.275],[63860,0.25],[68770,0.225],[73681,0.20],[78590,0.175],[83500,0.15],[88400,0.125],[93330,0.10],[98240,0.075],[Infinity,0.05]];
+const $=id=>document.getElementById(id);
+let mult=1;
+const num=id=>parseFloat($(id).value)||0;
+const list=id=>$(id).value.split(/[,\s]+/).map(Number).filter(x=>!isNaN(x));
+const usd=(x,d=0)=>'$'+x.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const pct=(x,d=2)=>(x*100).toFixed(d)+'%';
+function creatorFee(mcUsd,sol,bond){if(bond)return 0.003;const s=mcUsd/sol;for(const [up,f] of TIERS){if(s<up)return f/100}}
+function vestFn(pts){const p=[[0,0],...pts].sort((a,b)=>a[0]-b[0]);return h=>{if(h>=p[p.length-1][0])return p[p.length-1][1];for(let i=0;i<p.length-1;i++){const [a,va]=p[i],[b,vb]=p[i+1];if(h>=a&&h<=b)return va+(vb-va)*(h-a)/(b-a)}return 0}}
+function calc(){
+  const sol=num('sol'),zec=num('zec'),supply=num('supply');
+  const treas=num('treas')/100,split=num('split')/100,swap=num('swap')/100,rfee=num('rfee')/100,elig=num('elig')/100,rt=num('rt')/100;
+  const vol=list('vol').map(v=>v*mult),mc=list('mc');
+  const pts=$('vest').value.split(',').map(s=>s.split(':').map(Number)).filter(a=>a.length===2&&!isNaN(a[0])).map(([h,v])=>[h,v/100]);
+  const vest=vestFn(pts);
+  const n=Math.min(vol.length,mc.length);let fv=0,fz=0,hp=0;const rows=[];
+  for(let i=0;i<n;i++){
+    const r=creatorFee(mc[i],sol,i===0&&$('bond1').checked);const fee=vol[i]*r;const net=fee*treas*(1-swap);
+    const fin=net*split,hin=net-fin;fv+=fin;fz+=fin/zec;hp+=hin;
+    rows.push({h:i+1,vol:vol[i],mc:mc[i],r,fee,fin,hin,fv,fz,hp,fpct:fv/mc[i],ftok:fv/supply});
+  }
+  // KPIs
+  const pick=h=>rows[Math.min(h,n)-1];
+  const k=[[1,'1 jam'],[6,'6 jam'],[12,'12 jam'],[24,'24 jam']].filter(([h])=>h<=n);
+  $('kpis').innerHTML=k.map(([h,l])=>{const r=pick(h);return `<div class="kpi"><div class="l">Floor Vault · ${l}</div><div class="v">${usd(r.fv)}</div><div class="l">${r.fz.toFixed(3)} ZEC · ${pct(r.fpct)} dari MC</div></div>`}).join('')+
+    k.map(([h,l])=>{const r=pick(h);return `<div class="kpi"><div class="l">Hold Pool masuk · ${l}</div><div class="v">${usd(r.hp)}</div><div class="l">${(r.hp/zec).toFixed(3)} ZEC</div></div>`}).join('');
+  // table
+  $('tbl').innerHTML='<tr><th>Jam</th><th>Volume</th><th>MC</th><th>Creator fee</th><th>Fee</th><th>+Floor</th><th>+Hold</th><th>Floor Vault</th><th>Floor ZEC</th><th>Floor % MC</th><th>Floor/token</th></tr>'+
+    rows.map(r=>`<tr><td>${r.h}${r.h===1&&$('bond1').checked?' (bonding)':''}</td><td>${usd(r.vol)}</td><td>${usd(r.mc)}</td><td>${(r.r*100).toFixed(2)}%</td><td>${usd(r.fee)}</td><td>${usd(r.fin)}</td><td>${usd(r.hin)}</td><td>${usd(r.fv)}</td><td>${r.fz.toFixed(3)}</td><td>${pct(r.fpct)}</td><td>$${r.ftok.toFixed(9)}</td></tr>`).join('');
+  // holder
+  const pos=num('pos'),entry=Math.max(1,Math.min(n,Math.round(num('entry')))),hold=Math.max(0,num('hold'));
+  const frac=pos/mc[entry-1],share=frac/elig;let acc=0,t=0,h=entry-1;
+  while(t<hold-1e-9&&h<n){const st=Math.min(1,hold-t);acc+=rows[h].hin*st*share;t+=st;h++}
+  const v=vest(hold),claim=acc*v,cost=pos*rt,net=claim-cost;
+  $('holder').innerHTML=`<div class="kpis">
+    <div class="kpi"><div class="l">Porsi supply</div><div class="v">${pct(frac,3)}</div><div class="l">masuk di MC ${usd(mc[entry-1])}</div></div>
+    <div class="kpi"><div class="l">ZEC terkumpul (accrued)</div><div class="v">${usd(acc,2)}</div><div class="l">${(acc/zec).toFixed(5)} ZEC</div></div>
+    <div class="kpi"><div class="l">Unlocked (${hold} jam)</div><div class="v">${pct(v,0)}</div><div class="bar"><div style="width:${v*100}%"></div></div></div>
+    <div class="kpi"><div class="l">Bisa diklaim</div><div class="v">${usd(claim,2)}</div><div class="l">${pct(claim/pos,3)} dari posisi</div></div></div>
+    <p class="note" style="margin-top:10px">Cek farming: reward ${usd(claim,2)} vs biaya buy+sell ~${usd(cost,2)} → <span class="${net>0?'good':'bad'}">${net>0?'hold selama ini menguntungkan (belum termasuk pergerakan harga)':'farming rugi, flip cepat tidak worth it'}</span>. ZEC yang belum unlocked saat jual akan hangus ke pool.</p>`;
+  // arb
+  const fh=Math.max(1,Math.min(n,Math.round(num('fh')))),floorMc=rows[fh-1].fv,mkt=num('mkt');
+  const eff=floorMc*(1-rfee)*(1-rt/2);const gap=eff/mkt-1;
+  $('arb').innerHTML=`<p>Floor MC (jam ${fh}): <b>${usd(floorMc)}</b> · setelah redeem fee &amp; buy fee: <b>${usd(eff)}</b></p>
+    <p>Market MC ${usd(mkt)} → ${mkt<eff?`<span class="good">ARB TERBUKA: beli &amp; redeem ≈ +${pct(gap,1)}</span>, bot akan beli sampai harga ≈ floor`:`<span>tidak ada arb (harga di atas floor efektif)</span>`}</p>
+    <p class="note">Redeem = burn token → terima ZEC pro-rata dari Floor Vault × (1 − redeem fee). Redeem fee tetap di vault, jadi backing untuk holder tersisa naik sedikit.</p>`;
+}
+document.querySelectorAll('input,textarea').forEach(el=>el.addEventListener('input',calc));
+$('bond1').addEventListener('change',calc);
+document.querySelectorAll('#scen button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#scen button').forEach(x=>x.classList.remove('on'));b.classList.add('on');mult=parseFloat(b.dataset.k);calc()}));
+calc();
+</script>
+</body>
+</html>

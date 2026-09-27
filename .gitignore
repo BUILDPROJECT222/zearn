@@ -1,0 +1,6 @@
+node_modules/
+dist/
+.env
+apps/backend/data/*.db*
+apps/backend/data/selftest.db*
+*.log
