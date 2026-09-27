@@ -46,15 +46,15 @@ let cache: { at: number; s: VaultState } | null = null;
 
 export async function getVaultState(): Promise<VaultState> {
   if (cache && Date.now() - cache.at < 15_000) return cache.s;
-  const [supply, prices, market, intents] = await Promise.all([
+  const [supply, prices, intents] = await Promise.all([
     config.mint ? getMintSupply().catch(() => ({ supplyRaw: 0n, decimals: config.tokenDecimals })) : { supplyRaw: 0n, decimals: config.tokenDecimals },
     getPrices(),
-    getMarket(),
     getIntentsZecBalance().catch(() => null),
   ]);
+  const supplyN = Number(supply.supplyRaw) / 10 ** supply.decimals;
+  const market = await getMarket(supplyN);
   const floorRaw = kvBig(LEDGER.floor);
   const floorZec = zecToNumber(floorRaw);
-  const supplyN = Number(supply.supplyRaw) / 10 ** supply.decimals;
   const floorPerTokenZec = supplyN > 0 ? floorZec / supplyN : 0;
   const floorMcUsd = floorZec * prices.zec;
   const effectiveFloorMcUsd = floorMcUsd * (1 - config.redeemFeeBps / 10_000);
