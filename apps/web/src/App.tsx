@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { api, type Accrual, type Claim, type Redeem, type Sweep, type VaultState } from './api';
 import Sidebar, { type PageId } from './shell/Sidebar';
 import TopBar from './shell/TopBar';
-import HQ from './pages/HQ';
+import Dashboard from './pages/Dashboard';
 import VaultPage from './pages/Vault';
 import RedeemPage from './pages/Redeem';
 import HoldPage from './pages/Hold';
@@ -12,10 +12,10 @@ import RisksPage from './pages/Risks';
 
 export type Data = { s: VaultState | null; sweeps: Sweep[]; accruals: Accrual[]; redeems: Redeem[]; claims: Claim[]; err: string | null; refresh: () => void; go: (p: PageId) => void };
 
-const PAGES: PageId[] = ['hq', 'vault', 'redeem', 'hold', 'how', 'ledger', 'risks'];
+const PAGES: PageId[] = ['dashboard', 'vault', 'redeem', 'hold', 'how', 'ledger', 'risks'];
 const fromHash = (): PageId => {
   const h = window.location.hash.replace(/^#\/?/, '') as PageId;
-  return PAGES.includes(h) ? h : 'hq';
+  return PAGES.includes(h) ? h : 'dashboard';
 };
 
 export default function App() {
@@ -71,7 +71,7 @@ export default function App() {
             </div>
           )}
           <div className="page" key={page}>
-            {page === 'hq' && <HQ d={d} />}
+            {page === 'dashboard' && <Dashboard d={d} />}
             {page === 'vault' && <VaultPage d={d} />}
             {page === 'redeem' && <RedeemPage d={d} />}
             {page === 'hold' && <HoldPage d={d} />}

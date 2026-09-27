@@ -1,10 +1,10 @@
 import type { Data } from '../App';
 import { SYSTEMS, systemStatus } from '../systems';
 
-export type PageId = 'hq' | 'vault' | 'redeem' | 'hold' | 'how' | 'ledger' | 'risks';
+export type PageId = 'dashboard' | 'vault' | 'redeem' | 'hold' | 'how' | 'ledger' | 'risks';
 
 const I = {
-  hq: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" /></svg>,
+  dashboard: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" /></svg>,
   vault: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="12" cy="12" r="3" /></svg>,
   redeem: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3c2 3 5 5 5 9a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3 0-5 1-8z" /></svg>,
   hold: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z" /></svg>,
@@ -14,7 +14,7 @@ const I = {
 };
 
 const NAV: { id: PageId; label: string }[] = [
-  { id: 'hq', label: 'HQ' },
+  { id: 'dashboard', label: 'Dashboard' },
   { id: 'vault', label: 'Vault' },
   { id: 'redeem', label: 'Redeem' },
   { id: 'hold', label: 'Hold' },

@@ -5,7 +5,7 @@ import PhoneCard from '../components/PhoneCard';
 import Verify from '../components/Verify';
 import ActivityLog from '../components/ActivityLog';
 
-export default function HQ({ d }: { d: Data }) {
+export default function Dashboard({ d }: { d: Data }) {
   const { s } = d;
   const holders = d.accruals[0]?.holders_count ?? 0;
   const ok = d.sweeps.filter((w) => w.status === 'success').length;
