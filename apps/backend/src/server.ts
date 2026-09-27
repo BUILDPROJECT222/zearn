@@ -100,15 +100,18 @@ export function buildServer() {
   });
 
   // Serve the built web app (single-service deploy). Hash routing, so only index.html is needed as fallback.
-  if (config.webDist) {
-    const root = resolve(config.webDist);
-    if (existsSync(root)) {
-      app.register(fastifyStatic, { root, prefix: '/', wildcard: true, index: ['index.html'] });
-      app.setNotFoundHandler((req, reply) => {
-        if (req.method === 'GET' && !req.url.startsWith('/api/')) return reply.sendFile('index.html');
-        return reply.code(404).send({ error: 'not found' });
-      });
-    }
+  // WEB_DIST wins; otherwise look next to the backend (repo layout apps/backend + apps/web)
+  const candidates = [config.webDist, '../web/dist', 'web/dist', '/app/apps/web/dist'].filter(Boolean).map((p) => resolve(p));
+  const root = candidates.find((p) => existsSync(p));
+  console.log(`[server] web dist candidates: ${candidates.join(', ')} -> ${root ?? 'none'}`);
+  if (root) {
+    app.register(fastifyStatic, { root, prefix: '/', wildcard: true, index: ['index.html'] });
+    app.setNotFoundHandler((req, reply) => {
+      if (req.method === 'GET' && !req.url.startsWith('/api/')) return reply.sendFile('index.html');
+      return reply.code(404).send({ error: 'not found' });
+    });
+  } else {
+    console.warn('[server] no web dist found, API only');
   }
 
   return app;
