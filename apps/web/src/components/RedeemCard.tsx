@@ -5,6 +5,7 @@ import { createBurnCheckedInstruction, getAssociatedTokenAddressSync } from '@so
 import { Buffer } from 'buffer';
 import { api, short, tok, zec, type Redeem, type RedeemPreview, type VaultState } from '../api';
 import { DEST_OPTIONS, destFor, destValid, optionFor, type DestKind } from '../dest';
+import PayoutStatus from './PayoutStatus';
 
 const MEMO_PROGRAM = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr');
 
@@ -184,7 +185,7 @@ export default function RedeemCard({ s, onDone }: { s: VaultState | null; onDone
                   <td className="num">{tok(r.amount_raw, decimals)}</td>
                   <td className="num">{zec(r.payout_raw)}</td>
                   <td className="mono">{r.dest_kind ?? '–'} {short(r.dest_addr)}</td>
-                  <td><span className={`status ${r.status}`}>{r.status}</span>{r.error && <div className="note">{r.error}</div>}</td>
+                  <td><PayoutStatus r={r} withNote /></td>
                 </tr>
               ))}
             </tbody>

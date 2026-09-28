@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ago, api, short, tok, zec, type Accrual, type Claim, type Redeem, type Sweep } from '../api';
+import PayoutStatus from './PayoutStatus';
 
 export default function Activity({ tick, decimals }: { tick: number; decimals: number }) {
   const [sweeps, setSweeps] = useState<Sweep[]>([]);
@@ -71,7 +72,7 @@ export default function Activity({ tick, decimals }: { tick: number; decimals: n
                   <td className="num">{tok(r.amount_raw, decimals)}</td>
                   <td className="num gold">{zec(r.payout_raw)}</td>
                   <td className="mono">{r.dest_kind ?? '–'} {short(r.dest_addr)}</td>
-                  <td><span className={`status ${r.status}`}>{r.status}</span></td>
+                  <td><PayoutStatus r={r} /></td>
                 </tr>
               ))}
             </tbody>
@@ -88,7 +89,7 @@ export default function Activity({ tick, decimals }: { tick: number; decimals: n
                   <td className="mono">{short(c.owner)}</td>
                   <td className="num gold">{zec(c.amount_raw)}</td>
                   <td className="mono">{c.dest_kind}</td>
-                  <td><span className={`status ${c.status}`}>{c.status}</span></td>
+                  <td><PayoutStatus r={c} /></td>
                 </tr>
               ))}
             </tbody>

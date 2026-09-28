@@ -77,7 +77,7 @@ export function buildServer() {
   });
   app.get('/api/claims', async (req) => {
     const limit = Math.min(200, Number((req.query as { limit?: string }).limit ?? 50));
-    return db.prepare('SELECT id,created_at,owner,amount_raw,dest_kind,status FROM claims ORDER BY id DESC LIMIT ?').all(limit);
+    return db.prepare('SELECT id,created_at,owner,amount_raw,dest_kind,status,attempts,retry_safe FROM claims ORDER BY id DESC LIMIT ?').all(limit);
   });
 
   // ---- Redeem ----

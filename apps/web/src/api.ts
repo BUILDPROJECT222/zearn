@@ -54,6 +54,8 @@ export type RedeemPreview = {
   blockedReason: string | null;
 };
 export type Redeem = {
+  attempts?: number | null;
+  retry_safe?: number | null;
   signature: string;
   created_at: string;
   wallet: string | null;
@@ -67,7 +69,7 @@ export type Redeem = {
   error: string | null;
 };
 export type Lot = { id: number; amountRaw: string; openedAt: string; holdHours: number; unlock: number; accruedRaw: string; claimedRaw: string; claimableRaw: string };
-export type Claim = { id: number; created_at: string; owner?: string; amount_raw: string; dest_kind: string; dest_addr?: string; status: string; payout_ref?: string | null; error?: string | null };
+export type Claim = { id: number; created_at: string; attempts?: number | null; retry_safe?: number | null; owner?: string; amount_raw: string; dest_kind: string; dest_addr?: string; status: string; payout_ref?: string | null; error?: string | null };
 export type HolderView = { owner: string; balanceRaw: string; residualRaw: string; accruedRaw: string; claimableRaw: string; lots: Lot[]; claims: Claim[] };
 export type Sweep = { id: number; created_at: string; sol_lamports: string; zec_raw: string | null; floor_raw: string | null; hold_raw: string | null; status: string; tx_sig: string | null };
 export type Accrual = { id: number; ts: string; hold_in_raw: string; forfeited_raw: string; eligible_supply_raw: string; holders_count: number };

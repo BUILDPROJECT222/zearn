@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { api, curveText, hours, short, tok, zec, type HolderView, type VaultState } from '../api';
 import { DEST_OPTIONS, destFor, destValid, optionFor, type DestKind } from '../dest';
+import PayoutStatus from './PayoutStatus';
 
 export default function HoldCard({ s, onDone }: { s: VaultState | null; onDone: () => void }) {
   const { publicKey, signMessage } = useWallet();
@@ -122,7 +123,7 @@ export default function HoldCard({ s, onDone }: { s: VaultState | null; onDone: 
                       <td className="mono">#{c.id}</td>
                       <td className="num">{zec(c.amount_raw)}</td>
                       <td className="mono">{c.dest_kind} {short(c.dest_addr)}</td>
-                      <td><span className={`status ${c.status}`}>{c.status}</span>{c.error && <div className="note">{c.error}</div>}</td>
+                      <td><PayoutStatus r={c} withNote /></td>
                     </tr>
                   ))}
                 </tbody>
