@@ -1,4 +1,5 @@
 import { config } from './config.js';
+import { kvAdd, kvGet, kvSet, LEDGER } from './db.js';
 import { runAccrualEpoch } from './holdpool.js';
 import { retryPendingRedeems } from './jobs/redeem.js';
 import { recoverOnce } from './jobs/recovery.js';
@@ -31,6 +32,12 @@ async function main() {
   if (!config.mint) {
     L.warn('ZEARN_MINT is empty: keeper disabled, API only');
     return;
+  }
+  // one-time opening balance: ZEC already in the treasury becomes part of the floor, so ledger == on-chain from day one
+  if (config.openingFloorRaw > 0n && kvGet('opening_floor_applied', '') === '') {
+    kvAdd(LEDGER.floor, config.openingFloorRaw);
+    kvSet('opening_floor_applied', `${config.openingFloorRaw}@${new Date().toISOString()}`);
+    L.info(`opening floor credited: ${config.openingFloorRaw} zatoshi`);
   }
   if (config.vaultSolSecret) {
     void loop('sweep', sweepOnce, config.sweepIntervalSec * 1000);

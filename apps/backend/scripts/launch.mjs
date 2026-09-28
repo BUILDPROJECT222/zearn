@@ -7,6 +7,7 @@
 // Secret values are read from Railway only to derive public keys; they are never printed.
 import { Keypair, PublicKey } from '@solana/web3.js';
 import bs58 from 'bs58';
+import { KeyPair } from 'near-api-js';
 import { execFileSync } from 'node:child_process';
 import { readFileSync, existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -66,19 +67,30 @@ const RPC = v.SOLANA_RPC_URL;
 
 for (const k of ['SOLANA_RPC_URL', 'VAULT_SOL_SECRET', 'NEAR_ACCOUNT_ID', 'NEAR_PRIVATE_KEY']) (v[k] ? ok : bad)(`Railway has ${k}`);
 
+// the vault is whatever wallet VAULT_SOL_SECRET controls (it may be a wallet the owner created themselves)
 let vaultPk = null;
 if (v.VAULT_SOL_SECRET) {
   try {
     const s = v.VAULT_SOL_SECRET.trim();
     const kp = Keypair.fromSecretKey(s.startsWith('[') ? Uint8Array.from(JSON.parse(s)) : bs58.decode(s));
     vaultPk = kp.publicKey.toBase58();
-    (vault.PUBLIC && vaultPk === vault.PUBLIC ? ok : bad)(`VAULT_SOL_SECRET belongs to the new vault ${vault.PUBLIC ?? '(local file missing)'}`);
+    ok(`VAULT_SOL_SECRET is a valid Solana key → vault ${vaultPk}`);
+    if (vault.PUBLIC && vault.PUBLIC !== vaultPk) info(`(differs from the generated vault in secrets/, which is fine if you chose your own wallet)`);
   } catch (e) {
-    bad(`VAULT_SOL_SECRET does not parse: ${e.message}`);
+    bad(`VAULT_SOL_SECRET does not parse as a base58 or JSON secret key: ${e.message}`);
   }
 }
-if (v.NEAR_ACCOUNT_ID) (v.NEAR_ACCOUNT_ID === near.NEAR_ACCOUNT_ID ? ok : bad)(`NEAR_ACCOUNT_ID is the new treasury ${near.NEAR_ACCOUNT_ID?.slice(0, 10)}…`);
-if (v.NEAR_PRIVATE_KEY) (v.NEAR_PRIVATE_KEY === near.NEAR_PRIVATE_KEY ? ok : bad)('NEAR_PRIVATE_KEY matches the new treasury key');
+// the NEAR key must be a full-access key of NEAR_ACCOUNT_ID, checked on-chain
+if (v.NEAR_ACCOUNT_ID && v.NEAR_PRIVATE_KEY) {
+  try {
+    const pub = KeyPair.fromString(v.NEAR_PRIVATE_KEY.trim()).getPublicKey().toString();
+    const r = await fetch('https://rpc.mainnet.near.org', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'query', params: { request_type: 'view_access_key', finality: 'final', account_id: v.NEAR_ACCOUNT_ID, public_key: pub } }) }).then((x) => x.json());
+    if (r.result?.permission === 'FullAccess') ok(`NEAR_PRIVATE_KEY is a full-access key of ${v.NEAR_ACCOUNT_ID.slice(0, 12)}…`);
+    else bad(`NEAR_PRIVATE_KEY is not a full-access key of NEAR_ACCOUNT_ID (${r.error?.cause?.name ?? 'no such key'}); fund the account first if it is new`);
+  } catch (e) {
+    bad(`NEAR_PRIVATE_KEY does not parse: ${e.message}`);
+  }
+}
 (v.DB_PATH === '/data/zearn-mainnet.db' ? ok : bad)(`fresh ledger DB_PATH=${v.DB_PATH}`);
 (!v.VEST_CURVE ? ok : bad)('no test VEST_CURVE override');
 (Number(v.SWEEP_INTERVAL_SEC ?? 300) >= 300 ? ok : bad)(`sweep interval ${v.SWEEP_INTERVAL_SEC ?? 300} s`);
@@ -91,7 +103,16 @@ if (nearId) {
     (bal >= 0.5 ? ok : bad)(`NEAR treasury active, ${bal} NEAR`);
   } else bad('NEAR treasury account not active yet (send ~1 NEAR to it)');
 }
-const vaultAddr = vaultPk ?? vault.PUBLIC;
+// ZEC already in the treasury: the fresh ledger starts at 0, so it must be seeded into the floor or withdrawn first
+let treasuryZecRaw = 0n;
+if (nearId) {
+  const args_ = Buffer.from(JSON.stringify({ account_id: nearId, token_ids: ['nep141:zec.omft.near'] })).toString('base64');
+  const r = await fetch('https://rpc.mainnet.near.org', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'query', params: { request_type: 'call_function', finality: 'final', account_id: 'intents.near', method_name: 'mt_batch_balance_of', args_base64: args_ } }) }).then((x) => x.json());
+  if (r.result) treasuryZecRaw = BigInt(JSON.parse(Buffer.from(r.result.result).toString())[0] ?? '0');
+  if (treasuryZecRaw > 0n) info(`treasury already holds ${Number(treasuryZecRaw) / 1e8} ZEC on intents.near (${treasuryZecRaw} zatoshi)`);
+  else ok('treasury ZEC balance is 0, the fresh ledger will match');
+}
+const vaultAddr = vaultPk;
 if (RPC && vaultAddr) {
   const lamports = (await rpc(RPC, 'getBalance', [vaultAddr])).value;
   const sol = lamports / 1e9;
@@ -133,13 +154,25 @@ if (!preflightOnly) {
   }
 }
 
-console.log(`\n${failed === 0 ? 'ALL CHECKS PASSED' : `${failed} CHECK(S) FAILED`}`);
-if (failed || preflightOnly || checkOnly) process.exit(failed ? 1 : 0);
+const seedFloor = args.includes('--seed-floor');
+if (!preflightOnly && treasuryZecRaw > 0n && !seedFloor) {
+  bad(`the treasury holds ${Number(treasuryZecRaw) / 1e8} ZEC but the ledger starts at 0: rerun with --seed-floor to credit it to the Floor Vault, or withdraw it first`);
+}
 
-// ---------------- switch ----------------
-console.log('\nSWITCHING THE SITE TO THE COIN');
-railway('variables', '--service', SERVICE, '--set', `ZEARN_MINT=${ca}`, '--set', 'DRY_RUN=false');
-ok('ZEARN_MINT and DRY_RUN=false set, Railway is redeploying');
+console.log(`\n${failed === 0 ? 'ALL CHECKS PASSED' : `${failed} CHECK(S) FAILED`}`);
+if (failed || preflightOnly || checkOnly) {
+  process.exitCode = failed ? 1 : 0;
+} else {
+  // ---------------- switch ----------------
+  console.log('\nSWITCHING THE SITE TO THE COIN');
+  const sets = ['--set', `ZEARN_MINT=${ca}`, '--set', 'DRY_RUN=false'];
+  if (treasuryZecRaw > 0n) sets.push('--set', `OPENING_FLOOR_RAW=${treasuryZecRaw}`);
+  railway('variables', '--service', SERVICE, ...sets);
+  ok(`ZEARN_MINT and DRY_RUN=false set${treasuryZecRaw > 0n ? `, opening floor ${Number(treasuryZecRaw) / 1e8} ZEC` : ''}; Railway is redeploying`);
+  await waitLive();
+}
+
+async function waitLive() {
 const t0 = Date.now();
 for (;;) {
   await new Promise((r) => setTimeout(r, 10_000));
@@ -152,5 +185,6 @@ for (;;) {
       break;
     }
   } catch { /* redeploy in progress */ }
-  if (Date.now() - t0 > 10 * 60_000) { bad('site did not switch within 10 minutes, check Railway logs'); process.exit(1); }
+  if (Date.now() - t0 > 10 * 60_000) { bad('site did not switch within 10 minutes, check Railway logs'); process.exitCode = 1; return; }
+}
 }

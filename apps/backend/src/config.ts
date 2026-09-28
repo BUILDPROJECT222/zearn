@@ -60,6 +60,8 @@ export const config = {
   redeemFeeBps: num('REDEEM_FEE_BPS', 200),
   minRedeemTokens: num('MIN_REDEEM_TOKENS', 1000),
   minClaimZec: num('MIN_CLAIM_ZEC', 0.002),
+  // ZEC already sitting in the treasury at launch (e.g. leftovers) credited once to the Floor Vault, in zatoshi
+  openingFloorRaw: BigInt(Math.round(num('OPENING_FLOOR_RAW', 0))),
   // 1Click refuses ZEC payouts below ~7490 zatoshi ("Amount is too low for bridge"); never try to pay less
   minPayoutRaw: BigInt(Math.round(num('MIN_PAYOUT_RAW', 8000))),
   // effective minimum claim = max(MIN_CLAIM_ZEC, MIN_CLAIM_USD at the current ZEC price)
