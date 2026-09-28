@@ -105,6 +105,29 @@ The trade-off is custody: the keeper's Solana hot wallet and NEAR account sign e
 - [x] **intents.near balance view** `mt_batch_balance_of` returns balances for the ZEC/SOL token ids.
 - [x] Web app builds for production (`vite build`, ~745 kB JS before code-splitting).
 
+## Launch runbook (test coin → real coin)
+
+1. **Retire test keys.** Withdraw leftover SOL, NEAR and ZEC from the test vault and NEAR account. Move `apps/backend/secrets/*.env` to `apps/backend/secrets/test-archive/`.
+2. **New keys.** `node apps/backend/scripts/gen-sol-vault.mjs` and `node apps/backend/scripts/gen-near-account.mjs`. Back both files up in a password manager. Fund the vault (~0.1 SOL) and the NEAR account (~1 NEAR).
+3. **Railway secrets** (dashboard, never chat): `VAULT_SOL_SECRET`, `NEAR_ACCOUNT_ID`, `NEAR_PRIVATE_KEY`.
+4. **Fresh ledger.** `DB_PATH=/data/zearn-mainnet.db` (the test ledger stays in `/data/zearn.db` for reference; mixing them breaks the on-chain match).
+5. **Production parameters**, set `DRY_RUN=true` until the mint is verified:
+
+   | Variable | Test value | Launch value |
+   |---|---|---|
+   | `MIN_SWEEP_SOL` | 0.02 | 0.1 |
+   | `SOL_RESERVE` | 0.02 | 0.05 |
+   | `SWEEP_INTERVAL_SEC` | 60 | 300 |
+   | `VEST_CURVE` | 10-minute curve | delete (default 15 min 5% → 8 h 100%) |
+   | `MIN_CLAIM_USD` | 0.2 | 1 |
+   | `MIN_CLAIM_ZEC` | 0.0001 | 0.0001 (the USD minimum decides) |
+   | `CORS_ORIGIN` | `*` | the site origin |
+   | `X_HANDLE` | unset | the X username |
+
+6. **Create the coin on pump.fun** with the new vault wallet as creator. Avoid a dev buy from the vault (it is excluded from hold rewards anyway).
+7. **Set `ZEARN_MINT`**, verify on-chain that the bonding-curve creator is the vault, then `DRY_RUN=false`.
+8. **After launch:** claim creator fees on pump.fun regularly (the keeper sweeps them within one interval), watch `ledgerMatchesOnChain` on the dashboard, and review any payout with status `failed` and `retry_safe=0`.
+
 ## Restarts and failed payouts
 
 - Every sweep and payout is persisted before money moves (quote, then 1Click deposit address, then NEAR tx hash).

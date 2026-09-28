@@ -64,6 +64,8 @@ button { font: inherit; }
 .topbar .stats { display: flex; gap: 22px; overflow: hidden; flex: 1; white-space: nowrap; mask-image: linear-gradient(90deg, #000 90%, transparent); }
 .topbar .stats span { font-family: var(--tiny); font-size: 9px; color: var(--ink2); letter-spacing: 0.08em; }
 .topbar .stats b { color: var(--ink); font-family: var(--mono); font-size: 12px; margin-left: 6px; letter-spacing: 0; }
+.xlink { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 34px; min-width: 34px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--line2); background: var(--panel2); color: var(--ink); font-family: var(--mono); font-size: 12px; flex: none; }
+.xlink:hover { border-color: var(--gold); color: var(--gold); text-decoration: none; }
 .wallet-adapter-button-trigger { background: var(--gold) !important; color: #000 !important; border-radius: 8px !important; height: 34px !important; font-family: var(--pixel) !important; font-weight: 600 !important; font-size: 14px !important; padding: 0 14px !important; }
 
 main.content { padding: 20px 22px 60px; min-width: 0; }

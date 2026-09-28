@@ -39,6 +39,7 @@ export type VaultState = {
   };
   lastSweepAt: string | null;
   lastAccrualAt: string | null;
+  links?: { x: string | null };
 };
 export type RedeemPreview = {
   amountRaw: string;

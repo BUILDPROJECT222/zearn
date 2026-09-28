@@ -79,6 +79,9 @@ export const config = {
     .map((s) => s.trim())
     .filter(Boolean),
 
+  // Public links shown on the site (optional). X handle without the @.
+  xHandle: env('X_HANDLE').replace(/^@/, '').trim(),
+
   // Server
   port: num('PORT', 8787),
   // Directory of the built web app to serve at "/" (empty = API only)

@@ -10,9 +10,18 @@ import { holderView } from './holdpool.js';
 import { buildClaimMessage, issueNonce, submitClaim } from './jobs/claims.js';
 import { getRedeem, submitRedeem } from './jobs/redeem.js';
 import { getVaultState, previewRedeem, tokUnit } from './vault.js';
+import { allow } from './ratelimit.js';
+import { validateDest } from './payout.js';
+import { PublicKey } from '@solana/web3.js';
 
 export function buildServer() {
-  const app = Fastify({ logger: false });
+  // trustProxy: Railway's edge sets X-Forwarded-For, needed for per-IP rate limits
+  const app = Fastify({ logger: false, trustProxy: true, bodyLimit: 256 * 1024 });
+  const limited = (req: { ip: string }, reply: { code: (n: number) => { send: (b: unknown) => unknown } }, bucket: string, perMin: number) => {
+    if (allow(`${bucket}:${req.ip}`, perMin)) return false;
+    reply.code(429).send({ error: 'too many requests, slow down' });
+    return true;
+  };
   app.setReplySerializer((p) => JSON.stringify(p, (_k, v) => (typeof v === 'bigint' ? v.toString() : v)));
   app.register(cors, { origin: config.corsOrigin.split(',').map((s) => s.trim()) });
 
@@ -39,6 +48,7 @@ export function buildServer() {
     'sendTransaction',
   ]);
   app.post('/api/rpc', async (req, reply) => {
+    if (limited(req, reply, 'rpc', 90)) return;
     const body = req.body as { method?: string } | { method?: string }[];
     const calls = Array.isArray(body) ? body : [body];
     if (calls.length === 0 || calls.length > 10 || calls.some((c) => !c || !RPC_ALLOW.has(String(c.method)))) {
@@ -101,6 +111,7 @@ export function buildServer() {
   });
   const redeemBody = z.object({ signature: z.string().min(80).max(100) });
   app.post('/api/redeem', async (req, reply) => {
+    if (limited(req, reply, 'redeem', 20)) return;
     const b = redeemBody.safeParse(req.body);
     if (!b.success) return reply.code(400).send({ error: 'invalid signature' });
     return submitRedeem(b.data.signature);
@@ -111,7 +122,9 @@ export function buildServer() {
   });
   // Helius enhanced-transaction webhook (optional, faster than the polling scanner). Body: array of {signature, type, ...}
   app.post('/api/webhooks/helius', async (req, reply) => {
-    if (config.heliusWebhookSecret && req.headers.authorization !== config.heliusWebhookSecret) return reply.code(401).send({ error: 'unauthorized' });
+    // disabled unless a secret is configured: without it anyone could make us re-check arbitrary signatures
+    if (!config.heliusWebhookSecret) return reply.code(404).send({ error: 'not found' });
+    if (req.headers.authorization !== config.heliusWebhookSecret) return reply.code(401).send({ error: 'unauthorized' });
     const events = Array.isArray(req.body) ? (req.body as { signature?: string; type?: string }[]) : [];
     let queued = 0;
     for (const e of events) {
@@ -126,11 +139,22 @@ export function buildServer() {
   // ---- Hold Pool ----
   app.get('/api/holder/:owner', async (req) => holderView((req.params as { owner: string }).owner));
   app.get('/api/claim/prepare', async (req, reply) => {
+    if (limited(req, reply, 'claim-prepare', 12)) return;
     const q = req.query as { wallet?: string; kind?: string; addr?: string };
     if (!q.wallet || !q.kind || !q.addr) return reply.code(400).send({ error: 'wallet, kind and addr are required' });
-    const nonce = issueNonce(q.wallet);
+    let wallet: string;
+    let dest: { kind: string; addr: string };
+    try {
+      wallet = new PublicKey(q.wallet).toBase58();
+      dest = validateDest(q.kind, q.addr);
+    } catch (e) {
+      return reply.code(400).send({ error: (e as Error).message || 'invalid wallet or destination' });
+    }
+    // only holders with something recorded can start a claim (keeps the nonce table from being spammed)
+    if (BigInt(holderView(wallet).accruedRaw) <= 0n) return reply.code(400).send({ error: 'nothing accrued for this wallet yet' });
+    const nonce = issueNonce(wallet);
     const issued = new Date().toISOString();
-    return { nonce, issued, message: buildClaimMessage(q.wallet, q.kind, q.addr, nonce, issued) };
+    return { nonce, issued, message: buildClaimMessage(wallet, dest.kind, dest.addr, nonce, issued) };
   });
   const claimBody = z.object({
     owner: z.string(),
@@ -141,6 +165,7 @@ export function buildServer() {
     signature: z.string(),
   });
   app.post('/api/claim', async (req, reply) => {
+    if (limited(req, reply, 'claim', 12)) return;
     const b = claimBody.safeParse(req.body);
     if (!b.success) return reply.code(400).send({ error: 'invalid body' });
     try {

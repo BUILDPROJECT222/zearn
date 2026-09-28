@@ -1,5 +1,6 @@
 import type { Data } from '../App';
 import { SYSTEMS, systemStatus } from '../systems';
+import XLink from '../components/XLink';
 
 export type PageId = 'dashboard' | 'vault' | 'redeem' | 'hold' | 'how' | 'ledger' | 'risks';
 
@@ -50,6 +51,11 @@ export default function Sidebar({ page, go, d }: { page: PageId; go: (p: PageId)
           ))}
         </div>
       </div>
+      {d.s?.links?.x && (
+        <div style={{ padding: '10px 6px 0' }}>
+          <XLink handle={d.s.links.x} label />
+        </div>
+      )}
       <div className="foot">$zearn · pump.fun · near intents · zcash</div>
     </aside>
   );

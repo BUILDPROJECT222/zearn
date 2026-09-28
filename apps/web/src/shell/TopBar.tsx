@@ -1,5 +1,6 @@
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { ago, usd, type VaultState } from '../api';
+import XLink from '../components/XLink';
 
 export default function TopBar({ s }: { s: VaultState | null }) {
   const items: [string, string][] = s
@@ -22,6 +23,7 @@ export default function TopBar({ s }: { s: VaultState | null }) {
           <span key={k}>{k}<b>{v}</b></span>
         ))}
       </div>
+      <XLink handle={s?.links?.x} />
       <WalletMultiButton />
     </header>
   );

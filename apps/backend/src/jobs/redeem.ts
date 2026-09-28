@@ -64,7 +64,12 @@ async function processRedeem(signature: string): Promise<RedeemRow> {
   } catch (e) {
     const msg = (e as Error).message;
     if (msg.includes('finalized') || msg.includes('not found')) {
-      set({ error: msg });
+      // real burns finalize within a minute; anything still unknown after 15 minutes was never a valid burn
+      if (Date.now() - Date.parse(row.created_at) > 15 * 60_000) {
+        set({ status: 'rejected', error: `gave up: ${msg}` });
+      } else {
+        set({ error: msg });
+      }
       return getRedeem(signature)!;
     }
     set({ status: 'rejected', error: msg });

@@ -17,6 +17,8 @@ import { randomBytes } from 'node:crypto';
 const L = log('claim');
 
 export function issueNonce(owner: string): string {
+  // nonces live 10 minutes; drop anything older than an hour
+  db.prepare('DELETE FROM nonces WHERE created_at < ?').run(new Date(Date.now() - 3_600_000).toISOString());
   const nonce = randomBytes(12).toString('hex');
   db.prepare('INSERT INTO nonces(nonce,owner,created_at) VALUES(?,?,?)').run(nonce, owner, now());
   return nonce;
@@ -28,7 +30,15 @@ export function buildClaimMessage(owner: string, kind: string, addr: string, non
 
 export type ClaimInput = { owner: string; destKind: string; destAddr: string; nonce: string; issued: string; signature: string };
 
-export async function submitClaim(inp: ClaimInput) {
+let chain: Promise<unknown> = Promise.resolve();
+/** One claim at a time: the claimable amount is read and committed without interleaving. */
+export function submitClaim(inp: ClaimInput) {
+  const p = chain.then(() => doSubmitClaim(inp));
+  chain = p.catch(() => {});
+  return p;
+}
+
+async function doSubmitClaim(inp: ClaimInput) {
   const owner = new PublicKey(inp.owner).toBase58();
   const dest = validateDest(inp.destKind, inp.destAddr);
   const n = db.prepare('SELECT * FROM nonces WHERE nonce=? AND owner=?').get(inp.nonce, owner) as unknown as { created_at: string } | undefined;

@@ -47,6 +47,7 @@ export type VaultState = {
   };
   lastSweepAt: string | null;
   lastAccrualAt: string | null;
+  links: { x: string | null };
 };
 
 let cache: { at: number; s: VaultState } | null = null;
@@ -105,6 +106,7 @@ export async function getVaultState(): Promise<VaultState> {
     },
     lastSweepAt: kvGet(LEDGER.lastSweepAt, '') || null,
     lastAccrualAt: kvGet(LEDGER.lastAccrualAt, '') || null,
+    links: { x: /^[A-Za-z0-9_]{1,15}$/.test(config.xHandle) ? config.xHandle : null },
   };
   cache = { at: Date.now(), s };
   return s;
