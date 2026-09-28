@@ -1,5 +1,5 @@
 // Requires: npm i @resvg/resvg-js@2 (run from a folder where it is installed). Windows fonts: Segoe UI, Consolas.
-// Content cards 11-15 for X, 1600x900 PNG. Same look as make-cards.mjs. node make-cards-2.mjs [indexes...]
+// Content cards 11-20 for X, 1600x900 PNG. Same look as make-cards.mjs. node make-cards-2.mjs [indexes...]
 import { Resvg } from '@resvg/resvg-js';
 import { mkdirSync, writeFileSync } from 'node:fs';
 
@@ -59,7 +59,7 @@ function card(i, { eyebrow, title, body = [], art, eyebrowColor = C.gold }) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${DEFS}${s}</svg>`;
 }
 
-// ---------- cards 11-15 (art lives in the right half: x 900..1540, y 150..720) ----------
+// ---------- cards 11-20 (art lives in the right half: x 900..1540, y 150..720) ----------
 const CURVE = [[0, 0], [0.25, 0.05], [0.5, 0.1], [1, 0.2], [2, 0.35], [4, 0.6], [6, 0.8], [8, 1]];
 const CARDS = [
   // 11. start zearning in 3 steps
@@ -148,6 +148,100 @@ const CARDS = [
       <path d="M1280 272 C 1320 330, 1380 340, 1380 390" fill="none" stroke="${C.red}" stroke-width="5" marker-end="url(#arr-${C.red.slice(1)})"/>
       ${box(910, 400, 300, 310, C.green, C.panel, 3)}${T(1060, 450, 22, 'ABOVE FLOOR', { mono: true, anchor: 'middle', color: C.green, weight: 700 })}${T(1060, 520, 48, 'SELL', { anchor: 'middle', color: C.ink })}${T(1060, 560, 22, 'on pump.fun', { mono: true, anchor: 'middle', color: C.ink2, weight: 700, ls: 0 })}${T(1060, 640, 20, 'the market pays', { mono: true, anchor: 'middle', color: C.ink3, weight: 700, ls: 0 })}${T(1060, 668, 20, 'more than the vault', { mono: true, anchor: 'middle', color: C.ink3, weight: 700, ls: 0 })}
       ${box(1230, 400, 300, 310, C.red, C.panel, 3)}${T(1380, 450, 22, 'BELOW FLOOR', { mono: true, anchor: 'middle', color: C.red, weight: 700 })}${T(1380, 520, 48, 'BURN', { anchor: 'middle', color: C.ink })}${T(1380, 560, 22, 'receive ZEC', { mono: true, anchor: 'middle', color: C.ink2, weight: 700, ls: 0 })}${T(1380, 640, 20, 'the vault pays', { mono: true, anchor: 'middle', color: C.ink3, weight: 700, ls: 0 })}${T(1380, 668, 20, 'more than the market', { mono: true, anchor: 'middle', color: C.ink3, weight: 700, ls: 0 })}`,
+  }),
+  // 16. zcash 101
+  () => card(16, {
+    eyebrow: 'Zcash in 30 seconds',
+    eyebrowColor: C.gold,
+    title: [[['The money', C.ink]], [['behind the floor.', C.gold]]],
+    body: ['Zcash launched in 2016 with a hard cap of', '21M coins, like Bitcoin. Its twist: shielded', 'transactions, private by zero-knowledge', 'proofs (zk-SNARKs).'],
+    art: `${zecMark(1060, 300, 120)}
+      ${[
+        ['2016', 'launched', C.ink],
+        ['21M', 'max supply, ever', C.gold],
+        ['~4 y', 'halving schedule', C.ink],
+        ['zk', 'shielded payments', C.green],
+      ].map(([k, v, c], i) => {
+        const x = i % 2 ? 1240 : 930, y = i < 2 ? 470 : 600;
+        return `${box(x, y, 290, 110, C.line, C.panel, 2)}${T(x + 24, y + 58, 42, k, { color: c })}${T(x + 24, y + 90, 18, v, { mono: true, color: C.ink2, weight: 700, ls: 0 })}`;
+      }).join('')}
+      ${T(1215, 250, 24, 'your payout:', { mono: true, color: C.ink2, weight: 700 })}${T(1215, 292, 30, 'claim ZEC,', { color: C.ink })}${T(1215, 332, 30, 'then shield it.', { color: C.gold })}`,
+  }),
+  // 17. near intents 101
+  () => card(17, {
+    eyebrow: 'NEAR Intents in 30 seconds',
+    eyebrowColor: C.blue,
+    title: [[['Say what you want.', C.ink]], [['Solvers deliver.', C.blue]]],
+    body: ['An intent is an outcome, not a route:', '"turn this SOL into ZEC". Solvers compete', 'to fill it and the intents.near contract', 'settles it. No bridge UI to click through.'],
+    art: `${box(930, 160, 590, 110, C.purple, C.panel, 2)}${T(960, 205, 18, 'INTENT', { mono: true, color: C.purple, weight: 700 })}${T(960, 245, 28, '"0.5 SOL in → max ZEC out"', { color: C.ink, ls: 0 })}
+      ${[0, 1, 2].map((k) => `${box(930 + k * 200, 340, 190, 100, C.line, C.panel, 2)}${T(1025 + k * 200, 382, 20, `SOLVER ${'ABC'[k]}`, { mono: true, anchor: 'middle', color: C.ink2, weight: 700 })}${T(1025 + k * 200, 418, 22, ['0.0371 ZEC', '0.0374 ZEC', '0.0369 ZEC'][k], { mono: true, anchor: 'middle', color: k === 1 ? C.green : C.ink3, weight: 700, ls: 0 })}`).join('')}
+      ${arrow(1225, 275, 1225, 330, C.purple)}
+      <rect x="1130" y="336" width="190" height="108" rx="18" fill="none" stroke="${C.green}" stroke-width="3"/>${T(1225, 468, 18, 'best quote wins', { mono: true, anchor: 'middle', color: C.green, weight: 700 })}
+      ${arrow(1225, 480, 1225, 530, C.green)}
+      ${box(930, 540, 590, 160, C.blue, '#0f1420', 3)}${nearMark(1010, 620, 44)}${T(1080, 605, 26, 'intents.near settles it', { color: C.blue, ls: 0 })}${T(1080, 642, 18, 'one atomic swap, on-chain receipt', { mono: true, color: C.ink2, weight: 700, ls: 0 })}${T(1080, 672, 18, 'example quotes', { mono: true, color: C.ink3, weight: 700, ls: 0 })}`,
+  }),
+  // 18. glossary
+  () => card(18, {
+    eyebrow: 'Zearn glossary',
+    title: [[['Speak zearn', C.ink]], [['in 8 words.', C.gold]]],
+    body: ['Save this. Every word you will see on', 'the site, in one place.'],
+    art: [
+      ['SWEEP', 'fees in the vault wallet', 'swapped to ZEC', C.blue],
+      ['FLOOR VAULT', '50% of the ZEC,', 'backs every token', C.gold],
+      ['HOLD POOL', '50% of the ZEC,', 'paid to holders', C.green],
+      ['EPOCH', '5-minute round', 'that shares the pool', C.green],
+      ['LOT', 'each buy, with', 'its own age', C.ink2],
+      ['FORFEIT', 'locked share of a sold', 'lot, back to the pool', C.red],
+      ['REDEEM', 'burn for your share', 'of the vault, −2%', C.gold],
+      ['LEDGER', 'every ZEC, checked', 'against intents.near', C.blue],
+    ].map(([k, a, b, c], i) => {
+      const x = i % 2 ? 1230 : 920, y = 150 + Math.floor(i / 2) * 142;
+      return `${box(x, y, 295, 128, c, C.panel, 2)}${T(x + 20, y + 42, 24, k, { color: c, ls: 0 })}${T(x + 20, y + 78, 17, a, { mono: true, color: C.ink2, weight: 700, ls: 0 })}${T(x + 20, y + 104, 17, b, { mono: true, color: C.ink2, weight: 700, ls: 0 })}`;
+    }).join(''),
+  }),
+  // 19. myths vs facts
+  () => card(19, {
+    eyebrow: 'Myth vs fact',
+    title: [[['Four things', C.ink]], [['people get wrong.', C.gold]]],
+    body: ['Quick answers to the questions', 'we get the most.'],
+    art: [
+      ['You have to stake to earn', 'Just hold. Your balance is your position.'],
+      ['The floor is a fixed price', 'It is ZEC per token. It moves with ZEC.'],
+      ['Sell early, lose everything', 'Only the still-locked share goes back.'],
+      ['Burning is how you exit', 'Selling is the main door. Burn = emergency.'],
+    ].map(([m, f], i) => {
+      const y = 155 + i * 142;
+      return `${box(920, y, 605, 128, C.line, C.panel, 2)}
+        <circle cx="956" cy="${y + 40}" r="15" fill="${C.red}" fill-opacity="0.2" stroke="${C.red}" stroke-width="2"/>${T(956, y + 47, 20, '×', { anchor: 'middle', color: C.red })}
+        ${T(985, y + 48, 24, m, { color: C.ink3, ls: 0 })}<line x1="985" y1="${y + 40}" x2="${985 + m.length * 11.6}" y2="${y + 40}" stroke="${C.red}" stroke-width="3"/>
+        <circle cx="956" cy="${y + 90}" r="15" fill="${C.green}" fill-opacity="0.2" stroke="${C.green}" stroke-width="2"/><path d="M${948} ${y + 90} l6 6 l11 -12" fill="none" stroke="${C.green}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+        ${T(985, y + 98, 22, f, { color: C.ink, ls: 0 })}`;
+    }).join(''),
+  }),
+  // 20. jeets welcome (meme)
+  () => card(20, {
+    eyebrow: 'A note to jeets',
+    eyebrowColor: C.red,
+    title: [[['Jeets welcome.', C.ink]], [['Thanks for the ZEC.', C.gold]]],
+    body: ['Every sell pays a creator fee that becomes', 'ZEC in the vault. Sell early and your locked', 'Hold Pool share goes to the holders who', 'stayed. Paper hands fund diamond hands.'],
+    art: (() => {
+      const zig = Array.from({ length: 23 }, (_, k) => `${1010 + k * 20},${k % 2 ? 708 : 722}`).join(' ');
+      return `<g transform="rotate(3 1225 430)">
+        <path d="M1010 150 H1450 V708 L${zig.split(' ').reverse().join(' L')} Z" fill="#f2efe6"/>
+        <polyline points="${zig}" fill="none" stroke="#f2efe6" stroke-width="2"/>
+        ${T(1230, 210, 30, 'ZEARN VAULT', { anchor: 'middle', color: '#0a0a0e' })}${T(1230, 242, 16, 'receipt · paid by a jeet', { mono: true, anchor: 'middle', color: '#555', weight: 700, ls: 0 })}
+        <line x1="1040" y1="266" x2="1420" y2="266" stroke="#0a0a0e" stroke-dasharray="6 6"/>
+        ${[
+          ['panic sell', '1'],
+          ['creator fee → ZEC vault', '✓'],
+          ['locked share → holders', '✓'],
+          ['floor per token', '▲'],
+          ['holders who stayed', 'happy'],
+        ].map(([k, v], i) => `${T(1045, 310 + i * 48, 20, k, { mono: true, color: '#0a0a0e', weight: 700, ls: 0 })}${v === '✓' ? `<path d="M1398 ${302 + i * 48} l6 6 l11 -12" fill="none" stroke="#138a4c" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>` : T(1415, 310 + i * 48, 20, v, { mono: true, anchor: 'end', color: v === '▲' ? '#138a4c' : '#0a0a0e', weight: 700, ls: 0 })}`).join('')}
+        <line x1="1040" y1="560" x2="1420" y2="560" stroke="#0a0a0e" stroke-dasharray="6 6"/>
+        ${T(1230, 606, 26, 'THANK YOU FOR', { anchor: 'middle', color: '#0a0a0e' })}${T(1230, 640, 26, 'YOUR SERVICE', { anchor: 'middle', color: '#0a0a0e' })}
+      </g>`;
+    })(),
   }),
 ];
 

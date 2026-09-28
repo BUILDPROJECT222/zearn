@@ -1,6 +1,6 @@
 # Content posts — mechanism, never zero, Zcash, NEAR
 
-Images: `01.png` … `15.png` (1600×900, X in-feed size). Cards 11–15 come from `make-cards-2.mjs`. Every caption is under 280 characters.
+Images: `01.png` … `20.png` (1600×900, X in-feed size). Cards 11–20 come from `make-cards-2.mjs`. Every caption is under 280 characters.
 Suggested order: one or two per day, starting with 01. Pin 01 or the explainer video.
 
 ## 01 — Never zero (hook)
@@ -178,6 +178,65 @@ Price above the floor → sell on pump.fun, the market pays more.
 Price below the floor → burn for ZEC, the vault pays more.
 
 Burning is the emergency exit, not the main door. And every dip under the floor is a burn trade for someone.
+```
+
+## 16 — Zcash in 30 seconds
+Image: `16.png`
+```
+Zcash in 30 seconds:
+
+• launched 2016
+• 21M max supply, like Bitcoin
+• halves roughly every 4 years
+• shielded payments, private by zero-knowledge proofs
+
+That's the money behind the $ZEARN floor. Claim your ZEC, then shield it. 🛡️
+```
+
+## 17 — NEAR Intents in 30 seconds
+Image: `17.png`
+```
+NEAR Intents in 30 seconds:
+
+You say the outcome: "turn this SOL into ZEC".
+Solvers compete to fill it.
+The best quote wins and intents.near settles it on-chain.
+
+No bridge UI. That's how every $ZEARN fee becomes Zcash.
+```
+
+## 18 — Glossary
+Image: `18.png`
+```
+Speak zearn in 8 words 📖
+
+Sweep · Floor Vault · Hold Pool · Epoch
+Lot · Forfeit · Redeem · Ledger
+
+Every word you'll see on the site, on one card. Bookmark it for the next time someone asks "wait, how does this work?"
+```
+
+## 19 — Myth vs fact
+Image: `19.png`
+```
+4 things people get wrong about $ZEARN:
+
+❌ You have to stake → ✅ just hold
+❌ The floor is a fixed price → ✅ it's ZEC per token, it moves with ZEC
+❌ Sell early, lose everything → ✅ only the locked share goes back
+❌ Burning is the exit → ✅ selling is, burn is the emergency exit
+```
+
+## 20 — Jeets welcome
+Image: `20.png`
+```
+A note to jeets 🧾
+
+Your sell paid a creator fee. That fee became ZEC in the vault.
+Your still-locked Hold Pool share went to the holders who stayed.
+
+Paper hands fund diamond hands.
+Thank you for your service. 🫡
 ```
 
 ## How to claim (carousel)
