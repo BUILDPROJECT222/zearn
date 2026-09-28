@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { api, hours, short, tok, zec, type HolderView, type VaultState } from '../api';
+import { api, curveText, hours, short, tok, zec, type HolderView, type VaultState } from '../api';
 import { DEST_OPTIONS, destFor, destValid, optionFor, type DestKind } from '../dest';
 
 export default function HoldCard({ s, onDone }: { s: VaultState | null; onDone: () => void }) {
@@ -49,7 +49,7 @@ export default function HoldCard({ s, onDone }: { s: VaultState | null; onDone: 
     <div className="card">
       <h2>Hold rewards, no burn required</h2>
       <p className="sub">
-        Hold Pool ZEC accrues to every holder pro-rata each epoch and unlocks with lot age: 15 min = 5%, 1 h = 20%, 4 h = 60%, 8 h = 100%. Sell early and the locked part goes back to the pool.
+        Hold Pool ZEC accrues to every holder pro-rata each epoch and unlocks with lot age: {curveText(s?.params.vestCurve)}. Sell early and the locked part goes back to the pool.
       </p>
 
       {!publicKey ? (

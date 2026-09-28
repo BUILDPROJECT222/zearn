@@ -91,5 +91,17 @@ export const ago = (iso: string | null) => {
   const m = Math.round((Date.now() - Date.parse(iso)) / 60000);
   return m < 1 ? 'just now' : m < 60 ? `${m} min ago` : m < 1440 ? `${(m / 60).toFixed(1)} h ago` : `${Math.round(m / 1440)} d ago`;
 };
+/** "15 min", "1 h", "8 h" */
+export const dur = (h: number) => (h < 1 ? `${Math.round(h * 60)} min` : `${+h.toFixed(2)} h`);
+const DEFAULT_CURVE: [number, number][] = [[0, 0], [0.25, 0.05], [0.5, 0.1], [1, 0.2], [2, 0.35], [4, 0.6], [6, 0.8], [8, 1]];
+/** Unlock curve from the live backend params, e.g. "15 min = 5%, 1 h = 20%, … 8 h = 100%" */
+export const curveText = (curve: [number, number][] | undefined, max = 4) => {
+  const pts = (curve ?? DEFAULT_CURVE).filter(([h]) => h > 0);
+  const mid = pts.slice(1, -1);
+  const pick = pts.length <= max ? pts : max <= 2 ? [pts[0], pts[pts.length - 1]] : [pts[0], ...mid.filter((_, i) => i % Math.ceil(mid.length / (max - 2)) === 0), pts[pts.length - 1]];
+  return pick.map(([h, v]) => `${dur(h)} = ${Math.round(v * 100)}%`).join(', ');
+};
+export const firstUnlock = (curve: [number, number][] | undefined) => (curve ?? DEFAULT_CURVE).find(([h]) => h > 0) ?? [0.25, 0.05];
+export const fullUnlock = (curve: [number, number][] | undefined) => dur((curve ?? DEFAULT_CURVE)[(curve ?? DEFAULT_CURVE).length - 1][0]);
 export const hours = (h: number) => (h < 1 ? `${Math.round(h * 60)} min` : `${h.toFixed(1)} h`);
 export const compact = (x: number) => (x >= 1e6 ? `${(x / 1e6).toFixed(2)}M` : x >= 1e3 ? `${(x / 1e3).toFixed(1)}K` : x.toFixed(0));

@@ -1,4 +1,4 @@
-import type { VaultState } from '../api';
+import { curveText, type VaultState } from '../api';
 
 export default function FAQ({ s }: { s: VaultState | null }) {
   const fee = s ? s.params.redeemFeeBps / 100 : 2;
@@ -14,7 +14,7 @@ export default function FAQ({ s }: { s: VaultState | null }) {
       </details>
       <details>
         <summary>How do hold rewards work?</summary>
-        <p>Half of every sweep goes into the Hold Pool and accrues to holders pro-rata every epoch. Each buy opens a lot with its own clock. Rewards unlock as the lot ages: 5% after 15 minutes, 100% after 8 hours. Selling a lot early forfeits its locked part back to the pool.</p>
+        <p>Half of every sweep goes into the Hold Pool and accrues to holders pro-rata every epoch. Each buy opens a lot with its own clock. Rewards unlock as the lot ages: {curveText(s?.params.vestCurve, 2)}. Selling a lot early forfeits its locked part back to the pool.</p>
       </details>
       <details>
         <summary>Do I need to burn to claim hold rewards?</summary>

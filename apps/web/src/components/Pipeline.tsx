@@ -1,4 +1,4 @@
-import type { VaultState } from '../api';
+import { curveText, type VaultState } from '../api';
 
 const I = {
   trade: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 17l6-6 4 4 8-8" /><path d="M14 7h7v7" /></svg>,
@@ -41,7 +41,7 @@ export default function Pipeline({ s }: { s: VaultState | null }) {
         <div className="ico">{I.hold}</div>
         <div className="n">05 · {100 - split}%</div>
         <h3>Hold Pool</h3>
-        <p>Accrues to holders pro-rata. Unlocks with lot age: 15 min = 5%, 8 h = 100%. Sell early and the rest goes back to the pool.</p>
+        <p>Accrues to holders pro-rata. Unlocks with lot age: {curveText(s?.params.vestCurve, 2)}. Sell early and the rest goes back to the pool.</p>
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { short, usd, type Accrual, type Sweep, type VaultState } from '../api';
+import { fullUnlock, short, usd, type Accrual, type Sweep, type VaultState } from '../api';
 import { fmtPrice } from '../systems';
 
 export default function PhoneCard({ s, sweeps, accruals }: { s: VaultState | null; sweeps: Sweep[]; accruals: Accrual[] }) {
@@ -61,7 +61,7 @@ export default function PhoneCard({ s, sweeps, accruals }: { s: VaultState | nul
           <div><small>Pool</small><b className="green">{s ? `${(s.holdPendingZec + s.holdOwedZec).toFixed(4)} ZEC` : '–'}</b></div>
           <div><small>Accrued</small><b>{s ? s.holdOwedZec.toFixed(4) : '–'}</b></div>
           <div><small>Pending</small><b>{s ? s.holdPendingZec.toFixed(4) : '–'}</b></div>
-          <div><small>Full unlock</small><b>8h</b></div>
+          <div><small>Full unlock</small><b>{fullUnlock(s?.params.vestCurve)}</b></div>
         </div>
       )}
       <div className="spark">

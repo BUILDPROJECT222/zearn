@@ -1,4 +1,4 @@
-import type { VaultState } from '../api';
+import { dur, firstUnlock, fullUnlock, type VaultState } from '../api';
 
 type Node = { id: string; x: number; y: number; w?: number; h?: number; title: string; sub?: string; color?: string };
 type Edge = { from: string; to: string; label?: string; dashed?: boolean; color?: string };
@@ -46,7 +46,7 @@ export default function FlowDiagram({ s }: { s: VaultState | null }) {
     { id: 'snap', x: 30, y: 465, title: 'Snapshot', sub: 'all holder wallets' },
     { id: 'lots', x: 170, y: 465, title: 'Lots', sub: 'buy opens · sell cuts LIFO' },
     { id: 'accrue', x: 310, y: 465, title: 'Accrue', sub: 'pool ÷ pro-rata to lots', color: GREEN },
-    { id: 'unlock', x: 450, y: 465, title: 'Unlock by age', sub: '15 min 5% → 8 h 100%' },
+    { id: 'unlock', x: 450, y: 465, title: 'Unlock by age', sub: `${dur(firstUnlock(s?.params.vestCurve)[0])} ${Math.round(firstUnlock(s?.params.vestCurve)[1] * 100)}% → ${fullUnlock(s?.params.vestCurve)} 100%` },
     { id: 'claim', x: 590, y: 465, title: 'Claim', sub: 'signed message, no tx' },
     { id: 'oneclick3', x: 730, y: 465, title: '1Click payout', sub: 'same routes as redeem', color: BLUE },
     // arb
