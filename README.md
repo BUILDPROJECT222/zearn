@@ -107,7 +107,9 @@ The trade-off is custody: the keeper's Solana hot wallet and NEAR account sign e
 
 ## Pre-launch verification checklist (still open)
 
-- [ ] **Funding a 1Click INTENTS deposit** from the treasury balance: the keeper uses `mt_transfer` on `intents.near` to the quote's `depositAddress`, then `POST /v0/deposit/submit` with the NEAR tx hash. Confirm with one small real payout.
+- [x] **Funding a 1Click INTENTS deposit** from the treasury balance, verified live on 28 Sep 2026: hold claim #1 moved 0.00028913 ZEC via `mt_transfer` on `intents.near` to the 1Click deposit address, 1Click status SUCCESS, 0.003731676 SOL landed in the holder's wallet (Solana tx `3rr57se9…DAsT`). Ledger total still equals the on-chain intents balance afterwards.
+- [x] **Live sweep** SOL→ZEC (0.1308 SOL → 0.00989824 ZEC in ~40 s) and a second sweep from claimed pump.fun creator fees (0.0333 SOL → 0.0025 ZEC).
+- [x] **Hold Pool on mainnet**: pro-rata distribution to real holders and a forfeit from a same-epoch seller returned to the pool.
 - [ ] **1Click minimum sizes** in production (`minAmountIn` on the live quote) and real payout fees; tune `MIN_REDEEM_TOKENS` and `MIN_CLAIM_ZEC` so small payouts are not eaten by the ~85k-lamport withdraw fee.
 - [ ] **pump.fun creator fee claim**: `AUTO_CLAIM_PUMP` uses an untested `collect_creator_fee` account layout. Default is manual claiming on pump.fun. Post-graduation (PumpSwap) fees are not automated.
 - [ ] **Eligible supply**: off-curve owners (PDAs) are excluded automatically. Add other pool / market-maker addresses to `EXCLUDE_OWNERS` if needed.
