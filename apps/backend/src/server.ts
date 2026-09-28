@@ -46,7 +46,11 @@ export function buildServer() {
     const s = await getVaultState();
     const amountRaw = BigInt(Math.floor(amount * Number(tokUnit())));
     const r = previewRedeem(amountRaw, BigInt(s.supplyRaw), BigInt(s.floorRaw));
-    return { amountRaw, ...r, belowMin: amount < config.minRedeemTokens, memoExample: `${config.memoPrefix}:<SOL|ZECSOL|USDC>:<solana wallet> | ${config.memoPrefix}:ZEC:<zcash address> | ${config.memoPrefix}:NEAR:<near account>` };
+    const belowMin = amount < config.minRedeemTokens;
+    const payoutZero = r.payout <= 0n;
+    // single flag + reason so bots and manual burners can check before burning (the UI blocks on the same rule)
+    const blockedReason = payoutZero ? (BigInt(s.floorRaw) <= 0n ? 'vault is empty, payout would be 0 ZEC' : 'amount too small, payout rounds to 0 ZEC') : belowMin ? `below the ${config.minRedeemTokens} token minimum` : null;
+    return { amountRaw, ...r, belowMin, payoutZero, ok: blockedReason === null, blockedReason, memoExample: `${config.memoPrefix}:<SOL|ZECSOL|USDC>:<solana wallet> | ${config.memoPrefix}:ZEC:<zcash address> | ${config.memoPrefix}:NEAR:<near account>` };
   });
   const redeemBody = z.object({ signature: z.string().min(80).max(100) });
   app.post('/api/redeem', async (req, reply) => {

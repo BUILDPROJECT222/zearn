@@ -53,9 +53,11 @@ export default function Dashboard({ d }: { d: Data }) {
             <div className="eyebrow" style={{ color: 'var(--red)' }}>Emergency exit</div>
             <h3>Price dumped below the floor? Burn and take your ZEC.</h3>
             <div className="sub" style={{ margin: '4px 0 0' }}>
-              {s?.arbGapPct != null && s.arbGapPct > 0
-                ? `Redeeming pays ${s.arbGapPct.toFixed(1)}% more than the market right now.`
-                : 'Not needed today: the market pays more than the floor. Every burn raises the floor for everyone who stays.'}
+              {s && s.floorZec <= 0
+                ? 'The vault is empty, so there is no floor yet. It fills as creator fees are swept into ZEC.'
+                : s?.arbGapPct != null && s.arbGapPct > 0
+                  ? `Redeeming pays ${s.arbGapPct.toFixed(1)}% more than the market right now. Arbitrage buying pushes the price back toward the floor.`
+                  : `Not needed today: the market pays more than the floor. Each burn leaves its ${s ? s.params.redeemFeeBps / 100 : 2}% fee in the vault for everyone who stays.`}
             </div>
           </div>
           <button className="btn" onClick={() => d.go('redeem')}>Open emergency exit</button>

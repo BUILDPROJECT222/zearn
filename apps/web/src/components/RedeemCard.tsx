@@ -99,8 +99,14 @@ export default function RedeemCard({ s, onDone }: { s: VaultState | null; onDone
   return (
     <div className="card">
       <h2>Emergency exit: burn $ZEARN, receive ZEC</h2>
-      <p className="sub">Your pro-rata share of the Floor Vault, minus a {s ? s.params.redeemFeeBps / 100 : 2}% fee that stays in the vault for everyone else. Meant for when the price has dumped below the floor; every burn lifts the floor for the holders who stay.</p>
-      {arbClosed && (
+      <p className="sub">Your pro-rata share of the Floor Vault, minus a {s ? s.params.redeemFeeBps / 100 : 2}% fee that stays in the vault for everyone else. Meant for when the price has dumped below the floor.</p>
+      {s && s.floorZec <= 0 && (
+        <div className="preview" style={{ borderColor: 'var(--red)', marginTop: 0 }}>
+          <div><span>The vault is empty, there is no floor yet</span><b className="bad">0 ZEC</b></div>
+          <div className="note" style={{ marginTop: 4 }}>Burning now would pay nothing. The floor fills as creator fees are swept into ZEC.</div>
+        </div>
+      )}
+      {s && s.floorZec > 0 && arbClosed && (
         <div className="preview" style={{ borderColor: 'var(--gold)', marginTop: 0 }}>
           <div><span>Market price is above the floor right now</span><b className="gold">{s!.arbGapPct!.toFixed(1)}% gap</b></div>
           <div className="note" style={{ marginTop: 4 }}>Selling on pump.fun pays more than burning today. Redeem only if you specifically want ZEC, or once the price sits below the floor.</div>

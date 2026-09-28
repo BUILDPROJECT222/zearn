@@ -23,7 +23,7 @@ export function systemStatus(s: VaultState | null, sweeps: Sweep[], accruals: Ac
     keeper: fresh(s?.lastSweepAt) ? { status: 'working', line: `last sweep ${ago(s!.lastSweepAt)}` } : { status: 'idle', line: s?.lastSweepAt ? `last sweep ${ago(s.lastSweepAt)}` : 'waiting for fees' },
     bridge: inflight ? { status: 'working', line: 'swap in flight' } : { status: 'watching', line: `${sweeps.filter((w) => w.status === 'success').length} swaps settled` },
     indexer: fresh(s?.lastAccrualAt) ? { status: 'working', line: `epoch ${ago(s!.lastAccrualAt)} · ${accruals[0]?.holders_count ?? 0} holders` } : { status: 'idle', line: 'no epoch yet' },
-    arb: arb === null ? { status: 'idle', line: 'no market data' } : arb > 0 ? { status: 'working', line: `arb open +${arb.toFixed(1)}%` } : { status: 'watching', line: `gap ${arb.toFixed(1)}%` },
+    arb: s && s.floorZec <= 0 ? { status: 'idle', line: 'vault empty, no floor yet' } : arb === null ? { status: 'idle', line: 'no market data' } : arb > 0 ? { status: 'working', line: `arb open +${arb.toFixed(1)}%` } : { status: 'watching', line: `gap ${arb.toFixed(1)}%` },
     pay: { status: paid > 0 ? 'working' : 'watching', line: `${paid} payouts` },
   };
 }

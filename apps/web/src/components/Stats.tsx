@@ -49,7 +49,7 @@ export default function Stats({ s, sweeps }: { s: VaultState | null; sweeps: Swe
         <div className={`v ${s?.arbGapPct != null && s.arbGapPct > 0 ? 'ok' : ''}`} style={{ fontSize: 20 }}>
           {s?.arbGapPct == null ? '–' : `${s.arbGapPct > 0 ? '+' : ''}${s.arbGapPct.toFixed(1)}%`}
         </div>
-        <div className="s">{s?.arbGapPct != null && s.arbGapPct > 0 ? 'buy → burn → profit' : 'price above floor'}</div>
+        <div className="s">{s && s.floorZec <= 0 ? 'vault empty, no floor yet' : s?.arbGapPct != null && s.arbGapPct > 0 ? 'buy → burn → profit' : 'price above floor'}</div>
       </div>
       <div className="mid stat">
         <div className="l">Keeper</div>

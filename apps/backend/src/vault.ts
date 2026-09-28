@@ -61,7 +61,8 @@ export async function getVaultState(): Promise<VaultState> {
   const floorPerTokenZec = supplyN > 0 ? floorZec / supplyN : 0;
   const floorMcUsd = floorZec * prices.zec;
   const effectiveFloorMcUsd = floorMcUsd * (1 - config.redeemFeeBps / 10_000);
-  const arbGapPct = market && market.marketCapUsd > 0 ? (effectiveFloorMcUsd / market.marketCapUsd - 1) * 100 : null;
+  // no floor yet -> no gap (a -100% gap on an empty vault reads as an error)
+  const arbGapPct = floorRaw > 0n && market && market.marketCapUsd > 0 ? (effectiveFloorMcUsd / market.marketCapUsd - 1) * 100 : null;
 
   const s: VaultState = {
     mint: config.mint,

@@ -146,7 +146,7 @@ export default function Scene({ s }: { s: VaultState | null }) {
       </div>
       <div className="callout" style={{ left: '60%', top: '4%' }}>
         <b>Arb watcher</b>
-        <span className={arb !== null && arb > 0 ? 'green' : ''}>{arb === null ? 'no market data' : arb > 0 ? `OPEN +${arb.toFixed(1)}%` : `closed · gap ${arb.toFixed(1)}%`}</span>
+        <span className={arb !== null && arb > 0 ? 'green' : ''}>{s && s.floorZec <= 0 ? 'vault empty, no floor yet' : arb === null ? 'no market data' : arb > 0 ? `OPEN +${arb.toFixed(1)}%` : `closed · gap ${arb.toFixed(1)}%`}</span>
       </div>
       <div className="caption">zearn · solana · near intents 1click · zcash · all numbers live</div>
     </div>

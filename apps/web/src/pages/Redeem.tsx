@@ -8,7 +8,7 @@ export default function RedeemPage({ d }: { d: Data }) {
     <>
       <div className="eyebrow" style={{ color: 'var(--red)' }}>Emergency exit</div>
       <h1 className="title">If it dumps, <em>you still leave with ZEC.</em></h1>
-      <p className="lead">This is the safety net, not the main door. Use it when the market price has fallen below the ZEC floor, or when you want to cash out into ZEC directly. One transaction: burn plus a memo with your destination. Burning shrinks supply, so the floor per token rises for everyone who stays.</p>
+      <p className="lead">This is the safety net, not the main door. Use it when the market price has fallen below the ZEC floor. One transaction: burn plus a memo with your destination. Every burn leaves its {s ? s.params.redeemFeeBps / 100 : 2}% fee in the vault, so the floor per token ticks up slightly for everyone who stays.</p>
       <div className="gap-lg" />
       <div className="panel-grid">
         <RedeemCard s={s} onDone={d.refresh} />
@@ -23,7 +23,7 @@ export default function RedeemPage({ d }: { d: Data }) {
               <dt>Redeem fee</dt><dd>{s ? `${s.params.redeemFeeBps / 100}%` : '–'}</dd>
               <dt>Min redeem</dt><dd>{s ? `${s.params.minRedeemTokens.toLocaleString('en-US')}` : '–'}</dd>
               <dt>ZEC price</dt><dd>{usd(s?.prices.zec ?? null, 2)}</dd>
-              <dt>Arb gap</dt><dd className={s?.arbGapPct != null && s.arbGapPct > 0 ? 'green' : ''}>{s?.arbGapPct == null ? '–' : `${s.arbGapPct.toFixed(1)}%`}</dd>
+              <dt>Arb gap</dt><dd className={s?.arbGapPct != null && s.arbGapPct > 0 ? 'green' : ''}>{s && s.floorZec <= 0 ? 'no floor yet' : s?.arbGapPct == null ? '–' : `${s.arbGapPct.toFixed(1)}%`}</dd>
             </dl>
             <div className="note">Redeems pay in-kind from the vault, so they cannot be manipulated through a price oracle. The fee stays in the vault and lifts the floor for everyone who remains.</div>
           </div>

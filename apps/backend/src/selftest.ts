@@ -40,6 +40,20 @@ check('redeem gross = 0.2 ZEC', r.gross === 20_000_000n, r.gross.toString());
 check('redeem fee = 0.004 ZEC', r.fee === 400_000n, r.fee.toString());
 check('redeem payout = 0.196 ZEC', r.payout === 19_600_000n, r.payout.toString());
 
+// ---- floor per token after a redeem: rises only by the fee, never by the burn itself
+{
+  const S = 1_000_000_000n * 1_000_000n;
+  const V = 10n * ZEC;
+  const n = 100_000_000n * 1_000_000n; // burn 10% of supply
+  const { payout, fee } = previewRedeem(n, S, V);
+  const before = Number(V) / Number(S);
+  const after = Number(V - payout) / Number(S - n);
+  const expected = Number(V - (V * n) / S + fee) / Number(S - n); // pure pro-rata leaves V/S unchanged; only the fee remains
+  check('floor/token after redeem = before + fee share only', Math.abs(after - expected) < 1e-18, `${before} -> ${after}`);
+  check('no-fee redeem would leave floor/token unchanged', Math.abs(Number(V - (V * n) / S) / Number(S - n) - before) < 1e-18);
+  check('10% burn with 2% fee lifts floor/token by ~0.22%', Math.abs(after / before - 1 - 0.0022222) < 1e-5, `${((after / before - 1) * 100).toFixed(4)}%`);
+}
+
 // ---- memo parsing
 check('memo SOL parses', parseMemo(`ZEARN:SOL:${'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'}`)?.kind === 'SOL');
 check('memo ZEC t1 parses', parseMemo('ZEARN:ZEC:t1VJL2dPUyXK7avDRGoCK4n4wcmeoJ4CRBS')?.kind === 'ZEC');

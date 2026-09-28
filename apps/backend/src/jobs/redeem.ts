@@ -76,7 +76,15 @@ async function processRedeem(signature: string): Promise<RedeemRow> {
   const vault = kvBig(LEDGER.floor);
   const { gross, fee, payout } = previewRedeem(burn.amountRaw, supplyBefore, vault);
   if (payout <= 0n) {
-    set({ status: 'rejected', wallet: burn.wallet, amount_raw: burn.amountRaw.toString(), error: 'zero payout (empty vault)' });
+    // tokens are already burned on-chain and cannot be returned; record it clearly so it is visible in the ledger
+    set({
+      status: 'rejected',
+      wallet: burn.wallet,
+      amount_raw: burn.amountRaw.toString(),
+      supply_raw: supplyBefore.toString(),
+      vault_raw: vault.toString(),
+      error: vault <= 0n ? 'zero payout: the vault was empty at burn time (tokens are burned, nothing to pay)' : 'zero payout: amount too small for the vault size',
+    });
     return getRedeem(signature)!;
   }
   kvAdd(LEDGER.floor, -payout); // the fee stays in the vault
