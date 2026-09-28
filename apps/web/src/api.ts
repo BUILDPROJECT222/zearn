@@ -1,6 +1,7 @@
 // Production: the backend serves this app, so the API is same-origin. Dev: Vite on 5173, API on 8787.
 export const API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? (import.meta.env.PROD ? '' : 'http://localhost:8787');
-export const RPC_URL = (import.meta.env.VITE_SOLANA_RPC as string | undefined) ?? 'https://api.mainnet-beta.solana.com';
+// Solana RPC goes through the backend proxy: the public RPC blocks browsers (403) and the Helius key stays server-side.
+export const RPC_URL = `${API_URL || window.location.origin}/api/rpc`;
 
 export type Market = { priceUsd: number; marketCapUsd: number; volume24h: number; dex: string; url: string } | null;
 export type VaultState = {
@@ -36,6 +37,18 @@ export type VaultState = {
   lastSweepAt: string | null;
   lastAccrualAt: string | null;
 };
+export type RedeemPreview = {
+  amountRaw: string;
+  gross: string;
+  fee: string;
+  payout: string;
+  belowMin: boolean;
+  payoutZero: boolean;
+  belowMinPayout: boolean;
+  minPayoutRaw: string;
+  ok: boolean;
+  blockedReason: string | null;
+};
 export type Redeem = {
   signature: string;
   created_at: string;
@@ -68,7 +81,8 @@ export const api = {
   accruals: () => j<Accrual[]>('/api/accruals?limit=20'),
   redeems: (wallet?: string) => j<Redeem[]>(`/api/redeems?limit=20${wallet ? `&wallet=${wallet}` : ''}`),
   claims: () => j<Claim[]>('/api/claims?limit=20'),
-  redeemPreview: (amount: number) => j<{ amountRaw: string; gross: string; fee: string; payout: string; belowMin: boolean }>(`/api/redeem/preview?amount=${amount}`),
+  redeemPreview: (amount: number, kind?: string) =>
+    j<RedeemPreview>(`/api/redeem/preview?amount=${amount}${kind ? `&kind=${kind}` : ''}`),
   submitRedeem: (signature: string) => j<Redeem>('/api/redeem', { method: 'POST', body: JSON.stringify({ signature }) }),
   redeem: (sig: string) => j<Redeem>(`/api/redeem/${sig}`),
   holder: (owner: string) => j<HolderView>(`/api/holder/${owner}`),

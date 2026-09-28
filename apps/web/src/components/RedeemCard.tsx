@@ -3,7 +3,7 @@ import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
 import { createBurnCheckedInstruction, getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { Buffer } from 'buffer';
-import { api, short, tok, zec, type Redeem, type VaultState } from '../api';
+import { api, short, tok, zec, type Redeem, type RedeemPreview, type VaultState } from '../api';
 import { DEST_OPTIONS, destFor, destValid, optionFor, type DestKind } from '../dest';
 
 const MEMO_PROGRAM = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr');
@@ -14,7 +14,7 @@ export default function RedeemCard({ s, onDone }: { s: VaultState | null; onDone
   const [amount, setAmount] = useState('');
   const [kind, setKind] = useState<DestKind>('SOL');
   const [zaddr, setZaddr] = useState('');
-  const [preview, setPreview] = useState<{ payout: string; fee: string; belowMin: boolean } | null>(null);
+  const [preview, setPreview] = useState<RedeemPreview | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [mine, setMine] = useState<Redeem[]>([]);
@@ -25,9 +25,10 @@ export default function RedeemCard({ s, onDone }: { s: VaultState | null; onDone
 
   useEffect(() => {
     if (!n || !s) return setPreview(null);
-    const t = setTimeout(() => api.redeemPreview(n).then(setPreview).catch(() => setPreview(null)), 250);
+    setPreview(null);
+    const t = setTimeout(() => api.redeemPreview(n, kind).then(setPreview).catch(() => setPreview(null)), 250);
     return () => clearTimeout(t);
-  }, [n, s?.floorRaw]);
+  }, [n, kind, s?.floorRaw]);
 
   const loadMine = () => publicKey && api.redeems(publicKey.toBase58()).then(setMine).catch(() => {});
   useEffect(() => {
@@ -37,7 +38,8 @@ export default function RedeemCard({ s, onDone }: { s: VaultState | null; onDone
     connection
       .getTokenAccountBalance(getAssociatedTokenAddressSync(new PublicKey(s.mint), publicKey, false, program))
       .then((b) => setBalance(b.value.uiAmount ?? 0))
-      .catch(() => setBalance(0));
+      // no token account yet = 0; any other failure = unknown (hide the balance rather than claim 0)
+      .catch((e) => setBalance(/could not find account|Invalid param/i.test(String((e as Error).message)) ? 0 : null));
   }, [publicKey, s?.mint]);
 
   useEffect(() => {
@@ -47,7 +49,7 @@ export default function RedeemCard({ s, onDone }: { s: VaultState | null; onDone
   }, [mine]);
 
   const dest = destFor(kind, publicKey?.toBase58(), zaddr);
-  const payoutOk = !!preview && !preview.belowMin && BigInt(preview.payout) > 0n;
+  const payoutOk = !!preview && preview.ok; // the backend decides: zero payout, token minimum and payout minimum
   const arbClosed = s?.arbGapPct != null && s.arbGapPct <= 0;
   const canBurn = !!publicKey && !!s?.mint && !!s.tokenProgram && n > 0 && !busy && payoutOk && destValid(kind, publicKey?.toBase58(), zaddr);
   const blockReason = !publicKey
@@ -58,13 +60,17 @@ export default function RedeemCard({ s, onDone }: { s: VaultState | null; onDone
         ? 'Enter an amount'
         : !preview
           ? 'Calculating…'
-          : preview.belowMin
-            ? `Minimum is ${s.params.minRedeemTokens.toLocaleString('en-US')} ZEARN`
-            : BigInt(preview.payout) <= 0n
+          : preview.payoutZero
+            ? BigInt(s.floorRaw) <= 0n
               ? 'Payout would be 0 ZEC — vault is empty'
-              : !destValid(kind, publicKey?.toBase58(), zaddr)
-                ? 'Enter a valid destination'
-                : null;
+              : 'Payout rounds to 0 ZEC — burn more'
+            : preview.belowMin
+              ? `Minimum is ${s.params.minRedeemTokens.toLocaleString('en-US')} ZEARN`
+              : preview.belowMinPayout
+                ? `Payout below the ${zec(preview.minPayoutRaw, 6)} ZEC minimum — burn more`
+                : !destValid(kind, publicKey?.toBase58(), zaddr)
+                  ? 'Enter a valid destination'
+                  : null;
 
   async function burn() {
     if (!publicKey || !s) return;
@@ -82,8 +88,14 @@ export default function RedeemCard({ s, onDone }: { s: VaultState | null; onDone
       setBusy('Waiting for wallet signature…');
       const sig = await sendTransaction(tx, connection);
       setBusy('Waiting for Solana confirmation…');
-      const bh = await connection.getLatestBlockhash();
-      await connection.confirmTransaction({ signature: sig, ...bh }, 'confirmed');
+      // poll over HTTP: the RPC proxy has no websocket for confirmTransaction subscriptions
+      for (let i = 0; i < 60; i++) {
+        const st = (await connection.getSignatureStatuses([sig])).value[0];
+        if (st?.err) throw new Error('burn transaction failed on-chain');
+        if (st && (st.confirmationStatus === 'confirmed' || st.confirmationStatus === 'finalized')) break;
+        if (i === 59) throw new Error(`not confirmed yet; your burn ${sig.slice(0, 8)}… will still be picked up by the scanner`);
+        await new Promise((r) => setTimeout(r, 2000));
+      }
       setBusy('Registering the redeem with the vault…');
       await api.submitRedeem(sig);
       setAmount('');
@@ -144,10 +156,11 @@ export default function RedeemCard({ s, onDone }: { s: VaultState | null; onDone
 
       {preview && (
         <div className="preview">
-          <div><span>You receive</span><b className="gold">{zec(preview.payout)} ZEC</b></div>
-          <div><span>Worth</span><b>{s ? `$${((Number(preview.payout) / 1e8) * s.prices.zec).toFixed(2)}` : '–'}</b></div>
-          <div><span>Redeem fee (stays in vault)</span><b>{zec(preview.fee)} ZEC</b></div>
-          {preview.belowMin && <div className="bad">Below the {s?.params.minRedeemTokens} token minimum</div>}
+          <div><span>You receive</span><b className={preview.ok ? 'gold' : 'bad'}>{zec(preview.payout, 8)} ZEC</b></div>
+          <div><span>Worth</span><b>{s ? `$${((Number(preview.payout) / 1e8) * s.prices.zec).toFixed(4)}` : '–'}</b></div>
+          <div><span>Redeem fee (stays in vault)</span><b>{zec(preview.fee, 8)} ZEC</b></div>
+          <div><span>Minimum payout</span><b>{zec(preview.minPayoutRaw, 6)} ZEC</b></div>
+          {preview.blockedReason && <div className="bad">{preview.blockedReason}</div>}
         </div>
       )}
 

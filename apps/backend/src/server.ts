@@ -17,6 +17,37 @@ export function buildServer() {
   app.register(cors, { origin: config.corsOrigin.split(',').map((s) => s.trim()) });
 
   app.get('/api/health', async () => ({ ok: true, dryRun: config.dryRun, mint: config.mint || null }));
+
+  // ---- Solana RPC proxy for the web app ----
+  // Public mainnet RPC rejects browser calls (403) and the Helius key must not ship to the browser,
+  // so the site talks to Solana through here. Only the read/send methods a wallet flow needs are allowed.
+  const RPC_ALLOW = new Set([
+    'getLatestBlockhash',
+    'isBlockhashValid',
+    'getBlockHeight',
+    'getSlot',
+    'getEpochInfo',
+    'getVersion',
+    'getGenesisHash',
+    'getFeeForMessage',
+    'getMinimumBalanceForRentExemption',
+    'getBalance',
+    'getAccountInfo',
+    'getTokenAccountBalance',
+    'getSignatureStatuses',
+    'simulateTransaction',
+    'sendTransaction',
+  ]);
+  app.post('/api/rpc', async (req, reply) => {
+    const body = req.body as { method?: string } | { method?: string }[];
+    const calls = Array.isArray(body) ? body : [body];
+    if (calls.length === 0 || calls.length > 10 || calls.some((c) => !c || !RPC_ALLOW.has(String(c.method)))) {
+      return reply.code(403).send({ jsonrpc: '2.0', id: null, error: { code: 403, message: 'method not allowed through the Zearn RPC proxy' } });
+    }
+    const r = await fetch(config.solanaRpc, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+    reply.code(r.status).header('content-type', 'application/json');
+    return reply.send(await r.text());
+  });
   app.get('/api/state', async () => getVaultState());
 
   app.get('/api/sweeps', async (req) => {
@@ -41,16 +72,30 @@ export function buildServer() {
 
   // ---- Redeem ----
   app.get('/api/redeem/preview', async (req, reply) => {
-    const amount = Number((req.query as { amount?: string }).amount ?? 0);
+    const q = req.query as { amount?: string; kind?: string };
+    const amount = Number(q.amount ?? 0);
     if (!Number.isFinite(amount) || amount <= 0) return reply.code(400).send({ error: 'invalid amount' });
     const s = await getVaultState();
     const amountRaw = BigInt(Math.floor(amount * Number(tokUnit())));
     const r = previewRedeem(amountRaw, BigInt(s.supplyRaw), BigInt(s.floorRaw));
     const belowMin = amount < config.minRedeemTokens;
     const payoutZero = r.payout <= 0n;
+    // a payout must be worth paying: same floor as hold claims, higher for the Zcash bridge (~0.0003 ZEC fee)
+    let minPayoutZec = Math.max(config.minClaimZec, s.prices.zec > 0 ? config.minClaimUsd / s.prices.zec : 0);
+    if (q.kind === 'ZEC') minPayoutZec = Math.max(minPayoutZec, 0.0005);
+    const minPayoutRaw = BigInt(Math.ceil(minPayoutZec * 1e8));
+    const belowMinPayout = !payoutZero && r.payout < minPayoutRaw;
     // single flag + reason so bots and manual burners can check before burning (the UI blocks on the same rule)
-    const blockedReason = payoutZero ? (BigInt(s.floorRaw) <= 0n ? 'vault is empty, payout would be 0 ZEC' : 'amount too small, payout rounds to 0 ZEC') : belowMin ? `below the ${config.minRedeemTokens} token minimum` : null;
-    return { amountRaw, ...r, belowMin, payoutZero, ok: blockedReason === null, blockedReason, memoExample: `${config.memoPrefix}:<SOL|ZECSOL|USDC>:<solana wallet> | ${config.memoPrefix}:ZEC:<zcash address> | ${config.memoPrefix}:NEAR:<near account>` };
+    const blockedReason = payoutZero
+      ? BigInt(s.floorRaw) <= 0n
+        ? 'vault is empty, payout would be 0 ZEC'
+        : 'amount too small, payout rounds to 0 ZEC'
+      : belowMin
+        ? `below the ${config.minRedeemTokens} token minimum`
+        : belowMinPayout
+          ? `payout ${(Number(r.payout) / 1e8).toFixed(8)} ZEC is below the ${minPayoutZec.toFixed(6)} ZEC minimum${q.kind === 'ZEC' ? ' for Zcash payouts' : ''}; burn more`
+          : null;
+    return { amountRaw, ...r, belowMin, payoutZero, belowMinPayout, minPayoutRaw, ok: blockedReason === null, blockedReason, memoExample: `${config.memoPrefix}:<SOL|ZECSOL|USDC>:<solana wallet> | ${config.memoPrefix}:ZEC:<zcash address> | ${config.memoPrefix}:NEAR:<near account>` };
   });
   const redeemBody = z.object({ signature: z.string().min(80).max(100) });
   app.post('/api/redeem', async (req, reply) => {
