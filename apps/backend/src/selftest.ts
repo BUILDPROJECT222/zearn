@@ -26,7 +26,7 @@ const A = 'A1111111111111111111111111111111111111111111';
 const B = 'B2222222222222222222222222222222222222222222';
 const backdate = (owner: string, hours: number) =>
   db.prepare('UPDATE lots SET opened_at=? WHERE owner=?').run(new Date(Date.now() - hours * 3_600_000).toISOString(), owner);
-const invariant = () => kvBig(LEDGER.floor) + kvBig(LEDGER.holdPending) + kvBig(LEDGER.holdOwed);
+const invariant = () => kvBig(LEDGER.floor) + kvBig(LEDGER.holdPending) + kvBig(LEDGER.holdOwed) + kvBig(LEDGER.payoutOwed);
 
 // ---- unlock curve
 check('unlock 15 min = 5%', unlockFraction(0.25) === 0.05);
@@ -103,14 +103,18 @@ check('B residual keeps the vested part', near(BigInt(vb.residualRaw), vestedRem
 check('B lot amount halved', BigInt(vb.balanceRaw) === 250n * 1_000_000n);
 check('ledger invariant after forfeit', near(invariant(), inv0), `${invariant()} vs ${inv0}`);
 
-// ---- A claims everything
+// ---- A claims everything: owed first, then confirmed paid (mirrors jobs/claims.ts)
 const claimable = BigInt(holderView(A).claimableRaw);
 db.exec('BEGIN');
 markClaimed(A, claimable);
 kvAdd(LEDGER.holdOwed, -claimable);
+kvAdd(LEDGER.payoutOwed, claimable);
 db.exec('COMMIT');
 check('A claimable is 0 after claim', BigInt(holderView(A).claimableRaw) === 0n);
-check('ledger drops by the claim', near(invariant(), inv0 - claimable), `${invariant()} vs ${inv0 - claimable}`);
+check('ledger unchanged while the payout is in flight or failed', near(invariant(), inv0), `${invariant()} vs ${inv0}`);
+kvAdd(LEDGER.payoutOwed, -claimable); // payout confirmed
+check('ledger drops by the claim once paid', near(invariant(), inv0 - claimable), `${invariant()} vs ${inv0 - claimable}`);
+check('nothing left owed after a confirmed payout', kvBig(LEDGER.payoutOwed) === 0n);
 
 // ---- forfeited ZEC is redistributed next epoch (A gets 1000/1250 of it)
 const aBefore = BigInt(holderView(A).accruedRaw);

@@ -83,7 +83,9 @@ export function buildServer() {
     // a payout must be worth paying: same floor as hold claims, higher for the Zcash bridge (~0.0003 ZEC fee)
     let minPayoutZec = Math.max(config.minClaimZec, s.prices.zec > 0 ? config.minClaimUsd / s.prices.zec : 0);
     if (q.kind === 'ZEC') minPayoutZec = Math.max(minPayoutZec, 0.0005);
-    const minPayoutRaw = BigInt(Math.ceil(minPayoutZec * 1e8));
+    let minPayoutRaw = BigInt(Math.ceil(minPayoutZec * 1e8));
+    if (minPayoutRaw < config.minPayoutRaw) minPayoutRaw = config.minPayoutRaw; // 1Click bridge minimum
+    minPayoutZec = Number(minPayoutRaw) / 1e8;
     const belowMinPayout = !payoutZero && r.payout < minPayoutRaw;
     // single flag + reason so bots and manual burners can check before burning (the UI blocks on the same rule)
     const blockedReason = payoutZero

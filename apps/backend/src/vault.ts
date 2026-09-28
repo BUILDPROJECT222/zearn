@@ -21,7 +21,12 @@ export type VaultState = {
   floorZec: number;
   holdPendingZec: number;
   holdOwedZec: number;
+  /** committed to redeems/claims, not yet confirmed paid */
+  payoutOwedZec: number;
   intentsBalanceZec: number | null;
+  /** floor + hold pending + hold owed + payout owed, compared against the on-chain intents balance */
+  ledgerTotalZec: number;
+  ledgerMatchesOnChain: boolean | null;
   prices: { sol: number; zec: number };
   floorPerTokenZec: number;
   floorPerTokenUsd: number;
@@ -58,6 +63,7 @@ export async function getVaultState(): Promise<VaultState> {
   const market = await getMarket(supplyN);
   const floorRaw = kvBig(LEDGER.floor);
   const floorZec = zecToNumber(floorRaw);
+  const ledgerTotal = floorRaw + kvBig(LEDGER.holdPending) + kvBig(LEDGER.holdOwed) + kvBig(LEDGER.payoutOwed);
   const floorPerTokenZec = supplyN > 0 ? floorZec / supplyN : 0;
   const floorMcUsd = floorZec * prices.zec;
   const effectiveFloorMcUsd = floorMcUsd * (1 - config.redeemFeeBps / 10_000);
@@ -75,7 +81,10 @@ export async function getVaultState(): Promise<VaultState> {
     floorZec,
     holdPendingZec: zecToNumber(kvBig(LEDGER.holdPending)),
     holdOwedZec: zecToNumber(kvBig(LEDGER.holdOwed)),
+    payoutOwedZec: zecToNumber(kvBig(LEDGER.payoutOwed)),
     intentsBalanceZec: intents === null ? null : zecToNumber(intents),
+    ledgerTotalZec: zecToNumber(ledgerTotal),
+    ledgerMatchesOnChain: intents === null ? null : ledgerTotal === intents,
     prices,
     floorPerTokenZec,
     floorPerTokenUsd: floorPerTokenZec * prices.zec,

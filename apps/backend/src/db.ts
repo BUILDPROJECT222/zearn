@@ -111,6 +111,9 @@ export const LEDGER = {
   floor: 'floor_raw',
   holdPending: 'hold_pending_raw',
   holdOwed: 'hold_owed_raw',
+  // ZEC committed to a redeem or claim but not yet confirmed paid (in flight or failed, awaiting review).
+  // Keeps floor + holdPending + holdOwed + payoutOwed == intents balance even when a payout fails.
+  payoutOwed: 'payout_owed_raw',
   lastSweepAt: 'last_sweep_at',
   lastAccrualAt: 'last_accrual_at',
 } as const;

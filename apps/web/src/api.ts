@@ -15,7 +15,10 @@ export type VaultState = {
   floorZec: number;
   holdPendingZec: number;
   holdOwedZec: number;
+  payoutOwedZec: number;
   intentsBalanceZec: number | null;
+  ledgerTotalZec: number;
+  ledgerMatchesOnChain: boolean | null;
   prices: { sol: number; zec: number };
   floorPerTokenZec: number;
   floorPerTokenUsd: number;

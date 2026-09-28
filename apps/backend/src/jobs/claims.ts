@@ -43,7 +43,8 @@ export async function submitClaim(inp: ClaimInput) {
   const amount = BigInt(view.claimableRaw);
   const { zec: zecUsd } = await getPrices();
   const minZec = Math.max(config.minClaimZec, zecUsd > 0 ? config.minClaimUsd / zecUsd : 0);
-  const min = BigInt(Math.round(minZec * Number(ZEC_UNIT)));
+  let min = BigInt(Math.round(minZec * Number(ZEC_UNIT)));
+  if (min < config.minPayoutRaw) min = config.minPayoutRaw;
   if (amount < min) throw new Error(`claimable ${Number(amount) / Number(ZEC_UNIT)} ZEC is below the minimum of ${minZec.toFixed(5)} ZEC (≈ $${config.minClaimUsd})`);
 
   let id: number;
@@ -52,6 +53,7 @@ export async function submitClaim(inp: ClaimInput) {
     db.prepare('DELETE FROM nonces WHERE nonce=?').run(inp.nonce);
     markClaimed(owner, amount);
     kvAdd(LEDGER.holdOwed, -amount);
+    if (!config.dryRun) kvAdd(LEDGER.payoutOwed, amount); // owed until the payout is confirmed
     const ts = now();
     const r = db
       .prepare('INSERT INTO claims(created_at,updated_at,owner,amount_raw,dest_kind,dest_addr,status) VALUES(?,?,?,?,?,?,?)')
@@ -67,6 +69,7 @@ export async function submitClaim(inp: ClaimInput) {
   if (!config.dryRun) {
     try {
       const ref = await executePayout(dest.kind, dest.addr, amount);
+      kvAdd(LEDGER.payoutOwed, -amount);
       db.prepare('UPDATE claims SET status=?, payout_ref=?, updated_at=? WHERE id=?').run('paid', ref, now(), id);
     } catch (e) {
       db.prepare('UPDATE claims SET status=?, error=?, updated_at=? WHERE id=?').run('failed', (e as Error).message, now(), id);

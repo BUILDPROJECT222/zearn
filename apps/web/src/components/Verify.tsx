@@ -39,8 +39,12 @@ export default function Verify({ s }: { s: VaultState | null }) {
           <div className="n">2</div>
           <div>
             <b>The ZEC balance is public</b>
-            <p>The treasury holds ZEC as <span className="mono">nep141:zec.omft.near</span> inside intents.near. One view call, <span className="mono">mt_batch_balance_of</span>, returns the exact amount.</p>
-            <div className={`state ${near ? 'ok' : 'todo'}`}>{near ? `near view · ${s!.intentsBalanceZec!.toFixed(4)} ZEC` : 'near account not configured yet'}</div>
+            <p>The treasury holds ZEC as <span className="mono">nep141:zec.omft.near</span> inside intents.near. One view call, <span className="mono">mt_batch_balance_of</span>, returns the exact amount, and the protocol ledger (floor + hold pool + payouts in flight) must add up to it.</p>
+            <div className={`state ${!near ? 'todo' : s!.ledgerMatchesOnChain ? 'ok' : 'todo'}`}>
+              {!near
+                ? 'near account not configured yet'
+                : `on-chain ${s!.intentsBalanceZec!.toFixed(8)} ZEC · ledger ${s!.ledgerTotalZec.toFixed(8)} ZEC · ${s!.ledgerMatchesOnChain ? 'match' : 'MISMATCH'}`}
+            </div>
           </div>
         </div>
         <div className="check">

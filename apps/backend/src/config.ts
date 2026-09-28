@@ -60,6 +60,8 @@ export const config = {
   redeemFeeBps: num('REDEEM_FEE_BPS', 200),
   minRedeemTokens: num('MIN_REDEEM_TOKENS', 1000),
   minClaimZec: num('MIN_CLAIM_ZEC', 0.002),
+  // 1Click refuses ZEC payouts below ~7490 zatoshi ("Amount is too low for bridge"); never try to pay less
+  minPayoutRaw: BigInt(Math.round(num('MIN_PAYOUT_RAW', 8000))),
   // effective minimum claim = max(MIN_CLAIM_ZEC, MIN_CLAIM_USD at the current ZEC price)
   minClaimUsd: num('MIN_CLAIM_USD', 5),
   // burn scanner: finds burns with a ZEARN memo on-chain even if the user never submits the signature

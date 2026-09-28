@@ -87,7 +87,24 @@ async function processRedeem(signature: string): Promise<RedeemRow> {
     });
     return getRedeem(signature)!;
   }
-  kvAdd(LEDGER.floor, -payout); // the fee stays in the vault
+  if (payout < config.minPayoutRaw) {
+    // below what 1Click can deliver: nothing leaves the vault, so the burned share simply stays in the floor for everyone
+    set({
+      status: 'rejected',
+      wallet: burn.wallet,
+      amount_raw: burn.amountRaw.toString(),
+      supply_raw: supplyBefore.toString(),
+      vault_raw: vault.toString(),
+      gross_raw: gross.toString(),
+      payout_raw: payout.toString(),
+      error: `payout ${payout} zatoshi is below the ${config.minPayoutRaw} zatoshi bridge minimum; tokens are burned, their share stays in the floor`,
+    });
+    invalidateVaultCache();
+    return getRedeem(signature)!;
+  }
+  // move the payout out of the floor into "owed" until the payout is confirmed (the fee stays in the vault)
+  kvAdd(LEDGER.floor, -payout);
+  if (!config.dryRun) kvAdd(LEDGER.payoutOwed, payout);
   set({
     status: config.dryRun ? 'verified' : 'paying',
     wallet: burn.wallet,
@@ -107,8 +124,10 @@ async function processRedeem(signature: string): Promise<RedeemRow> {
 
   try {
     const ref = await executePayout(dest.kind, dest.addr, payout);
+    kvAdd(LEDGER.payoutOwed, -payout);
     set({ status: 'paid', payout_ref: ref });
   } catch (e) {
+    // stays in payout_owed: the ZEC is still in the treasury and still owed to this burner (review, then retry)
     set({ status: 'failed', error: (e as Error).message });
     L.error('payout failed', (e as Error).message);
   }
