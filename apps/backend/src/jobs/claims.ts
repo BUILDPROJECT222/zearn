@@ -8,7 +8,8 @@ import { config } from '../config.js';
 import { db, kvAdd, LEDGER, now } from '../db.js';
 import { holderView, markClaimed } from '../holdpool.js';
 import { log } from '../log.js';
-import { executePayout, validateDest } from '../payout.js';
+import { validateDest } from '../payout.js';
+import { runPayout } from './payouts.js';
 import { getPrices } from '../prices.js';
 import { invalidateVaultCache, ZEC_UNIT } from '../vault.js';
 import { randomBytes } from 'node:crypto';
@@ -66,15 +67,6 @@ export async function submitClaim(inp: ClaimInput) {
   }
   invalidateVaultCache();
   L.info(`claim #${id} ${owner.slice(0, 6)} ${amount} raw -> ${dest.kind}:${dest.addr}`);
-  if (!config.dryRun) {
-    try {
-      const ref = await executePayout(dest.kind, dest.addr, amount);
-      kvAdd(LEDGER.payoutOwed, -amount);
-      db.prepare('UPDATE claims SET status=?, payout_ref=?, updated_at=? WHERE id=?').run('paid', ref, now(), id);
-    } catch (e) {
-      db.prepare('UPDATE claims SET status=?, error=?, updated_at=? WHERE id=?').run('failed', (e as Error).message, now(), id);
-      L.error('claim payout failed', (e as Error).message);
-    }
-  }
+  if (!config.dryRun) await runPayout('claims', id);
   return db.prepare('SELECT * FROM claims WHERE id=?').get(id);
 }

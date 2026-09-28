@@ -8,7 +8,7 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "seed:dev": "tsx src/seed-dev.ts",
-    "selftest": "tsx src/selftest.ts"
+    "selftest": "tsx src/selftest.ts && tsx src/selftest-recovery.ts"
   },
   "dependencies": {
     "@fastify/cors": "^10.0.1",

@@ -51,12 +51,15 @@ const destAsset = (kind: DestKind) =>
  * quote (depositType INTENTS) -> mt_transfer the ZEC to the deposit address -> submit the NEAR tx hash.
  * Returns "1click:<depositAddress>:<nearTxHash>" so the status can be polled later.
  */
-export async function executePayout(kind: DestKind, addr: string, zecRaw: bigint): Promise<string> {
+export async function executePayout(kind: DestKind, addr: string, zecRaw: bigint, onProgress?: (ref: string) => void): Promise<string> {
   if (zecRaw <= 0n) throw new Error('zero payout');
   const q = await quotePayout(destAsset(kind), zecRaw, addr, false);
   const dep = q.quote.depositAddress;
   if (!dep) throw new Error('1Click returned no depositAddress');
+  // persisted before any funds move, so a restart can look the order up at 1Click
+  onProgress?.(`1click:${dep}:`);
   const hash = await mtTransfer(dep, config.assetZec, BigInt(q.quote.amountIn), q.quote.depositMemo);
+  onProgress?.(`1click:${dep}:${hash}`);
   try {
     await submitDeposit(hash, dep, { nearSenderAccount: config.nearAccountId, memo: q.quote.depositMemo });
   } catch {

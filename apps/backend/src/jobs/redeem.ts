@@ -6,7 +6,8 @@
 import { config } from '../config.js';
 import { db, kvAdd, kvBig, LEDGER, now } from '../db.js';
 import { log } from '../log.js';
-import { executePayout, parseMemo } from '../payout.js';
+import { parseMemo } from '../payout.js';
+import { runPayout } from './payouts.js';
 import { getMintSupply, parseBurnTx } from '../solana.js';
 import { invalidateVaultCache, previewRedeem } from '../vault.js';
 
@@ -122,15 +123,7 @@ async function processRedeem(signature: string): Promise<RedeemRow> {
   L.info(`redeem ${signature.slice(0, 8)}: burn ${burn.amountRaw} -> ${payout} raw ZEC to ${dest.kind}:${dest.addr}`);
   if (config.dryRun) return getRedeem(signature)!;
 
-  try {
-    const ref = await executePayout(dest.kind, dest.addr, payout);
-    kvAdd(LEDGER.payoutOwed, -payout);
-    set({ status: 'paid', payout_ref: ref });
-  } catch (e) {
-    // stays in payout_owed: the ZEC is still in the treasury and still owed to this burner (review, then retry)
-    set({ status: 'failed', error: (e as Error).message });
-    L.error('payout failed', (e as Error).message);
-  }
+  await runPayout('redeems', signature);
   return getRedeem(signature)!;
 }
 

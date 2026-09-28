@@ -105,6 +105,13 @@ The trade-off is custody: the keeper's Solana hot wallet and NEAR account sign e
 - [x] **intents.near balance view** `mt_batch_balance_of` returns balances for the ZEC/SOL token ids.
 - [x] Web app builds for production (`vite build`, ~745 kB JS before code-splitting).
 
+## Restarts and failed payouts
+
+- Every sweep and payout is persisted before money moves (quote, then 1Click deposit address, then NEAR tx hash).
+- `payout_owed` holds ZEC committed to a redeem or claim until 1Click confirms delivery, so `floor + hold_pending + hold_owed + payout_owed` always equals the on-chain intents balance. `/api/state` exposes `ledgerMatchesOnChain`, shown on the dashboard.
+- `jobs/recovery.ts` runs at startup and every minute: credits sweeps that finished while the process was down, settles payouts 1Click already delivered, retries payouts that provably never left the treasury (max 3 attempts), and flags anything uncertain as `failed` with `retry_safe=0` for a human. Nothing is ever paid twice automatically.
+- `npm run selftest --prefix apps/backend` includes 16 simulated restart scenarios.
+
 ## Pre-launch verification checklist (still open)
 
 - [x] **Funding a 1Click INTENTS deposit** from the treasury balance, verified live on 28 Sep 2026: hold claim #1 moved 0.00028913 ZEC via `mt_transfer` on `intents.near` to the 1Click deposit address, 1Click status SUCCESS, 0.003731676 SOL landed in the holder's wallet (Solana tx `3rr57se9…DAsT`). Ledger total still equals the on-chain intents balance afterwards.

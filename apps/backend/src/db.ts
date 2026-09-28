@@ -88,6 +88,17 @@ CREATE TABLE IF NOT EXISTS nonces (
 );
 `);
 
+// ---- additive migrations for databases created by earlier versions ----
+function addColumn(table: string, col: string, def: string) {
+  const cols = db.prepare(`PRAGMA table_info(${table})`).all() as unknown as { name: string }[];
+  if (!cols.some((c) => c.name === col)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${def}`);
+}
+for (const t of ['redeems', 'claims']) {
+  addColumn(t, 'attempts', 'INTEGER NOT NULL DEFAULT 0');
+  // 1 = the payout provably never reached the user (no deposit, or refunded), so it is safe to pay again
+  addColumn(t, 'retry_safe', 'INTEGER NOT NULL DEFAULT 0');
+}
+
 export const now = () => new Date().toISOString();
 
 export function kvGet(k: string, d = '0'): string {

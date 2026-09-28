@@ -1,6 +1,7 @@
 import { config } from './config.js';
 import { runAccrualEpoch } from './holdpool.js';
 import { retryPendingRedeems } from './jobs/redeem.js';
+import { recoverOnce } from './jobs/recovery.js';
 import { scanBurnsOnce } from './jobs/scanner.js';
 import { sweepOnce } from './jobs/sweep.js';
 import { log } from './log.js';
@@ -45,6 +46,8 @@ async function main() {
     config.sweepIntervalSec * 1000,
   );
   void loop('redeem-retry', retryPendingRedeems, 30_000);
+  // finish or safely retry sweeps and payouts interrupted by a restart (first pass runs immediately)
+  void loop('recovery', async () => void (await recoverOnce()), 60_000);
   if (config.burnScanEnabled) void loop('burn-scan', scanBurnsOnce, config.burnScanIntervalSec * 1000);
 }
 
