@@ -5,6 +5,7 @@ export const RPC_URL = (import.meta.env.VITE_SOLANA_RPC as string | undefined) ?
 export type Market = { priceUsd: number; marketCapUsd: number; volume24h: number; dex: string; url: string } | null;
 export type VaultState = {
   mint: string;
+  tokenProgram: string | null;
   dryRun: boolean;
   tokenDecimals: number;
   supplyRaw: string;

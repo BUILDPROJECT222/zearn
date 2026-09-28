@@ -26,7 +26,7 @@ export default function FAQ({ s }: { s: VaultState | null }) {
       </details>
       <details>
         <summary>Where can I receive my ZEC?</summary>
-        <p>Three ways: swapped to SOL in your Solana wallet, as the ZEC SPL token in your Solana wallet, or as native ZEC to a Zcash address. Unified (u1…) and transparent (t1…/t3…) addresses both work; the bridge fee is about 0.0003 ZEC and it takes about two minutes.</p>
+        <p>Five ways: SOL, the ZEC SPL token or USDC in your Solana wallet, native NEAR to a NEAR account, or native ZEC to a transparent Zcash address (t1…/t3…). The Zcash route takes about two minutes and costs about 0.0003 ZEC in bridge fees. Payouts are not shielded; shield them yourself after arrival.</p>
       </details>
       <details>
         <summary>Does redeeming raise the floor for others?</summary>

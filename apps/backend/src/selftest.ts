@@ -43,7 +43,7 @@ check('redeem payout = 0.196 ZEC', r.payout === 19_600_000n, r.payout.toString()
 // ---- memo parsing
 check('memo SOL parses', parseMemo(`ZEARN:SOL:${'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'}`)?.kind === 'SOL');
 check('memo ZEC t1 parses', parseMemo('ZEARN:ZEC:t1VJL2dPUyXK7avDRGoCK4n4wcmeoJ4CRBS')?.kind === 'ZEC');
-check('memo ZEC u1 parses', parseMemo('ZEARN:ZEC:u156jsaq8vqtca7sxfwmtkc2l3h5z027hdp5vf3npgkzqgt9njjd3z6lsmpwj5nq2cs63cy3jygwcgktac5yak5q68dcpp08hv5euspxuc924skujcpp57wmzzpvtg9gjvw3cnpfzwjlsm25h0x8gty7pp5edmgzyyd3rvl345husm9kmm')?.kind === 'ZEC');
+check('memo ZEC u1 rejected while ALLOW_UNIFIED_ZEC=false', parseMemo('ZEARN:ZEC:u156jsaq8vqtca7sxfwmtkc2l3h5z027hdp5vf3npgkzqgt9njjd3z6lsmpwj5nq2cs63cy3jygwcgktac5yak5q68dcpp08hv5euspxuc924skujcpp57wmzzpvtg9gjvw3cnpfzwjlsm25h0x8gty7pp5edmgzyyd3rvl345husm9kmm') === null);
 check('memo ZECSOL parses', parseMemo('ZEARN:ZECSOL:EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')?.kind === 'ZECSOL');
 check('memo USDC parses', parseMemo('ZEARN:USDC:EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')?.kind === 'USDC');
 check('memo NEAR account parses', parseMemo('ZEARN:NEAR:alice.near')?.kind === 'NEAR');

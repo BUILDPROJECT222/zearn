@@ -6,9 +6,9 @@ export default function RedeemPage({ d }: { d: Data }) {
   const { s } = d;
   return (
     <>
-      <div className="eyebrow">Floor Vault</div>
-      <h1 className="title">Burn $ZEARN, <em>walk away with ZEC.</em></h1>
-      <p className="lead">One transaction: burn plus a memo with your destination. The keeper pays your pro-rata share of the vault once the burn is finalized.</p>
+      <div className="eyebrow" style={{ color: 'var(--red)' }}>Emergency exit</div>
+      <h1 className="title">If it dumps, <em>you still leave with ZEC.</em></h1>
+      <p className="lead">This is the safety net, not the main door. Use it when the market price has fallen below the ZEC floor, or when you want to cash out into ZEC directly. One transaction: burn plus a memo with your destination. Burning shrinks supply, so the floor per token rises for everyone who stays.</p>
       <div className="gap-lg" />
       <div className="panel-grid">
         <RedeemCard s={s} onDone={d.refresh} />

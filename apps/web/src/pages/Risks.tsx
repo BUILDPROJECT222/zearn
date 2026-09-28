@@ -4,7 +4,7 @@ const RISKS: [string, string][] = [
   ['Custody in v1', 'The keeper holds a Solana hot wallet and a NEAR account. If those keys are lost or misused, the vault is at risk. Mitigation: public balances, a public ledger, and a roadmap to Chain Signatures and a TEE keeper.'],
   ['ZEC volatility', 'The floor is denominated in ZEC. When ZEC drops, the USD floor drops with it. When ZEC pumps, so does the floor. This is a feature and a risk.'],
   ['Thin floor early on', 'In the first hours the vault backs only a few percent of market cap. The floor is a safety net far below the price, not a reason to expect the price to hold.'],
-  ['Payout privacy', 'Payouts are visible on Solana, NEAR and the bridge. Sending to a unified Zcash address shields the funds on arrival, but the amount and timing of the payout itself are public.'],
+  ['No private payouts', 'Payouts are visible on Solana, NEAR and the bridge, and ZEC arrives at transparent addresses only. If you want privacy, shield the ZEC yourself after it lands.'],
   ['Bridge dependency', 'Swaps and payouts run through NEAR Intents. Delays, minimum sizes or refunds on that side delay redeems and claims.'],
   ['Indexer edge cases', 'Moving tokens between your own wallets resets the lot clock. Undetected pool or program accounts could distort eligible supply until excluded.'],
   ['pump.fun fee routing', 'Automation of creator-fee claiming, especially after graduation to PumpSwap, is not fully verified. Manual claiming may be needed.'],

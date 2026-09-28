@@ -68,6 +68,9 @@ export const config = {
   // optional Helius webhook (enhanced transactions, type BURN); the header value must equal this secret
   heliusWebhookSecret: env('HELIUS_WEBHOOK_SECRET'),
   memoPrefix: env('MEMO_PREFIX', 'ZEARN'),
+  // Unified (u1) Zcash addresses were accepted by 1Click dry quotes but never tested with a real payout.
+  // Keep off until one real u1 payout has landed; transparent t1/t3 only meanwhile.
+  allowUnifiedZec: bool('ALLOW_UNIFIED_ZEC', false),
   vestCurve: parseVestCurve(env('VEST_CURVE', '0.25:5, 0.5:10, 1:20, 2:35, 4:60, 6:80, 8:100')),
   excludeOwners: env('EXCLUDE_OWNERS', '')
     .split(',')

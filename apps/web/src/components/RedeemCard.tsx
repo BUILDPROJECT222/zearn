@@ -33,8 +33,9 @@ export default function RedeemCard({ s, onDone }: { s: VaultState | null; onDone
   useEffect(() => {
     loadMine();
     if (!publicKey || !s?.mint) return setBalance(null);
+    const program = s.tokenProgram ? new PublicKey(s.tokenProgram) : undefined;
     connection
-      .getTokenAccountBalance(getAssociatedTokenAddressSync(new PublicKey(s.mint), publicKey))
+      .getTokenAccountBalance(getAssociatedTokenAddressSync(new PublicKey(s.mint), publicKey, false, program))
       .then((b) => setBalance(b.value.uiAmount ?? 0))
       .catch(() => setBalance(0));
   }, [publicKey, s?.mint]);
@@ -46,18 +47,36 @@ export default function RedeemCard({ s, onDone }: { s: VaultState | null; onDone
   }, [mine]);
 
   const dest = destFor(kind, publicKey?.toBase58(), zaddr);
-  const canBurn = !!publicKey && !!s?.mint && n > 0 && !busy && destValid(kind, publicKey?.toBase58(), zaddr);
+  const payoutOk = !!preview && !preview.belowMin && BigInt(preview.payout) > 0n;
+  const arbClosed = s?.arbGapPct != null && s.arbGapPct <= 0;
+  const canBurn = !!publicKey && !!s?.mint && !!s.tokenProgram && n > 0 && !busy && payoutOk && destValid(kind, publicKey?.toBase58(), zaddr);
+  const blockReason = !publicKey
+    ? 'Connect a wallet first'
+    : !s?.tokenProgram
+      ? 'Waiting for mint info…'
+      : n <= 0
+        ? 'Enter an amount'
+        : !preview
+          ? 'Calculating…'
+          : preview.belowMin
+            ? `Minimum is ${s.params.minRedeemTokens.toLocaleString('en-US')} ZEARN`
+            : BigInt(preview.payout) <= 0n
+              ? 'Payout would be 0 ZEC — vault is empty'
+              : !destValid(kind, publicKey?.toBase58(), zaddr)
+                ? 'Enter a valid destination'
+                : null;
 
   async function burn() {
     if (!publicKey || !s) return;
     setErr(null);
     try {
       const mint = new PublicKey(s.mint);
-      const ata = getAssociatedTokenAddressSync(mint, publicKey);
+      const program = new PublicKey(s.tokenProgram!); // SPL Token or Token-2022, reported by the backend
+      const ata = getAssociatedTokenAddressSync(mint, publicKey, false, program);
       const raw = BigInt(Math.floor(n * 10 ** decimals));
       const memo = `${s.params.memoPrefix}:${kind}:${dest}`;
       const tx = new Transaction().add(
-        createBurnCheckedInstruction(ata, mint, publicKey, raw, decimals),
+        createBurnCheckedInstruction(ata, mint, publicKey, raw, decimals, [], program),
         new TransactionInstruction({ keys: [], programId: MEMO_PROGRAM, data: Buffer.from(memo, 'utf8') }),
       );
       setBusy('Waiting for wallet signature…');
@@ -79,8 +98,14 @@ export default function RedeemCard({ s, onDone }: { s: VaultState | null; onDone
 
   return (
     <div className="card">
-      <h2>Burn $ZEARN, receive ZEC</h2>
-      <p className="sub">Your pro-rata share of the Floor Vault, minus a {s ? s.params.redeemFeeBps / 100 : 2}% fee that stays in the vault for everyone else.</p>
+      <h2>Emergency exit: burn $ZEARN, receive ZEC</h2>
+      <p className="sub">Your pro-rata share of the Floor Vault, minus a {s ? s.params.redeemFeeBps / 100 : 2}% fee that stays in the vault for everyone else. Meant for when the price has dumped below the floor; every burn lifts the floor for the holders who stay.</p>
+      {arbClosed && (
+        <div className="preview" style={{ borderColor: 'var(--gold)', marginTop: 0 }}>
+          <div><span>Market price is above the floor right now</span><b className="gold">{s!.arbGapPct!.toFixed(1)}% gap</b></div>
+          <div className="note" style={{ marginTop: 4 }}>Selling on pump.fun pays more than burning today. Redeem only if you specifically want ZEC, or once the price sits below the floor.</div>
+        </div>
+      )}
 
       <label>
         Amount of $ZEARN{' '}
@@ -121,7 +146,7 @@ export default function RedeemCard({ s, onDone }: { s: VaultState | null; onDone
       )}
 
       <button className="primary" disabled={!canBurn} onClick={burn}>
-        {busy ?? (publicKey ? 'Burn & redeem' : 'Connect a wallet first')}
+        {busy ?? blockReason ?? 'Burn & redeem'}
       </button>
       {err && <div className="note bad">{err}</div>}
       <div className="note">

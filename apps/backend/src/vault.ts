@@ -2,7 +2,7 @@ import { config } from './config.js';
 import { kvBig, kvGet, LEDGER } from './db.js';
 import { getIntentsZecBalance } from './intents.js';
 import { getMarket, getPrices } from './prices.js';
-import { getMintSupply } from './solana.js';
+import { getMintSupply, getTokenProgram } from './solana.js';
 
 export const ZEC_UNIT = 10n ** BigInt(config.zecDecimals);
 export const zecToNumber = (raw: bigint) => Number(raw) / Number(ZEC_UNIT);
@@ -11,6 +11,8 @@ export const tokToNumber = (raw: bigint) => Number(raw) / Number(tokUnit());
 
 export type VaultState = {
   mint: string;
+  /** token program owning the mint (SPL Token or Token-2022); the web app needs it to build the burn */
+  tokenProgram: string | null;
   dryRun: boolean;
   tokenDecimals: number;
   supplyRaw: string;
@@ -46,10 +48,11 @@ let cache: { at: number; s: VaultState } | null = null;
 
 export async function getVaultState(): Promise<VaultState> {
   if (cache && Date.now() - cache.at < 15_000) return cache.s;
-  const [supply, prices, intents] = await Promise.all([
+  const [supply, prices, intents, tokenProgram] = await Promise.all([
     config.mint ? getMintSupply().catch(() => ({ supplyRaw: 0n, decimals: config.tokenDecimals })) : { supplyRaw: 0n, decimals: config.tokenDecimals },
     getPrices(),
     getIntentsZecBalance().catch(() => null),
+    config.mint ? getTokenProgram().then((p) => p.toBase58()).catch(() => null) : Promise.resolve(null),
   ]);
   const supplyN = Number(supply.supplyRaw) / 10 ** supply.decimals;
   const market = await getMarket(supplyN);
@@ -62,6 +65,7 @@ export async function getVaultState(): Promise<VaultState> {
 
   const s: VaultState = {
     mint: config.mint,
+    tokenProgram,
     dryRun: config.dryRun,
     tokenDecimals: supply.decimals,
     supplyRaw: supply.supplyRaw.toString(),

@@ -20,11 +20,11 @@ export default function Dashboard({ d }: { d: Data }) {
               Hold to zearn. <em>The floor holds.</em>
             </h1>
             <p className="lead">
-              $ZEARN is a pump.fun coin whose creator fees become ZEC in a public treasury on NEAR Intents. Every trade fills the vault, the vault holds the floor. Burn to redeem your share any time. Hold to unlock the rest. No trading desk, no APY promises.
+              $ZEARN is a pump.fun coin whose creator fees become ZEC in a public treasury on NEAR Intents. Every trade fills the vault, the vault holds the floor. Hold to unlock ZEC rewards. If the price ever dumps below the floor, burn and walk away with ZEC. No trading desk, no APY promises.
             </p>
             <div className="cta">
               <a className="btn gold" href={s?.mint ? `https://pump.fun/coin/${s.mint}` : '#'} target="_blank" rel="noreferrer">Buy on pump.fun →</a>
-              <button className="btn" onClick={() => d.go('redeem')}>Redeem ZEC</button>
+              <button className="btn" onClick={() => d.go('hold')}>Hold rewards</button>
               <button className="btn" onClick={() => d.go('how')}>How it works</button>
             </div>
           </div>
@@ -46,6 +46,21 @@ export default function Dashboard({ d }: { d: Data }) {
       <Verify s={s} />
       <div className="gap-lg" />
       <ActivityLog d={d} />
+      <div className="gap-lg" />
+      <div className="panel" style={{ borderColor: s?.arbGapPct != null && s.arbGapPct > 0 ? 'var(--red)' : 'var(--line)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <div>
+            <div className="eyebrow" style={{ color: 'var(--red)' }}>Emergency exit</div>
+            <h3>Price dumped below the floor? Burn and take your ZEC.</h3>
+            <div className="sub" style={{ margin: '4px 0 0' }}>
+              {s?.arbGapPct != null && s.arbGapPct > 0
+                ? `Redeeming pays ${s.arbGapPct.toFixed(1)}% more than the market right now.`
+                : 'Not needed today: the market pays more than the floor. Every burn raises the floor for everyone who stays.'}
+            </div>
+          </div>
+          <button className="btn" onClick={() => d.go('redeem')}>Open emergency exit</button>
+        </div>
+      </div>
     </>
   );
 }

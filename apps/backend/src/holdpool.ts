@@ -112,11 +112,13 @@ export function runAccrualEpoch(snapshot: Map<string, bigint>) {
       kvAdd(LEDGER.holdPending, forfeited);
       kvAdd(LEDGER.holdOwed, -forfeited);
     }
+    // record the eligible supply as of this snapshot (distribution above used the pre-diff lots)
+    const eligibleNow = [...snapshot.values()].reduce((s, v) => s + v, 0n);
     db.prepare('INSERT INTO accrual_epochs(ts,hold_in_raw,forfeited_raw,eligible_supply_raw,holders_count) VALUES(?,?,?,?,?)').run(
       ts,
       (distributedAcc / ACC_SCALE).toString(),
       forfeited.toString(),
-      eligible.toString(),
+      eligibleNow.toString(),
       count,
     );
     kvSet(LEDGER.lastAccrualAt, ts);

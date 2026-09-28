@@ -3,7 +3,7 @@ import { isZcashAddress, mtTransfer, quotePayout, submitDeposit } from './intent
 import { PublicKey } from '@solana/web3.js';
 
 /**
- * ZEC    = native ZEC to a Zcash address (t1/t3/u1)
+ * ZEC    = native ZEC to a transparent Zcash address (t1/t3; u1 behind ALLOW_UNIFIED_ZEC)
  * SOL    = SOL to a Solana wallet
  * ZECSOL = ZEC (SPL) to a Solana wallet
  * USDC   = USDC (SPL) to a Solana wallet
@@ -16,7 +16,7 @@ export const isNearAccount = (a: string) => /^([a-z0-9]+([-_.][a-z0-9]+)*\.(near
 
 export function validateDest(kind: string, addr: string): { kind: DestKind; addr: string } {
   if (kind === 'ZEC') {
-    if (!isZcashAddress(addr)) throw new Error('ZEC address must be transparent (t1…/t3…) or unified (u1…)');
+    if (!isZcashAddress(addr)) throw new Error(config.allowUnifiedZec ? 'ZEC address must be t1…/t3… or u1…' : 'ZEC address must be transparent (t1… or t3…)');
     return { kind, addr };
   }
   if (kind === 'NEAR') {

@@ -71,7 +71,7 @@ export default function Verify({ s }: { s: VaultState | null }) {
           <div className="n">6</div>
           <div>
             <b>Payouts never touch our own bridge code</b>
-            <p>Every payout is a NEAR Intents 1Click order funded from the treasury balance: ZEC→SOL, ZEC→ZEC on Solana, or ZEC→Zcash (t1 or u1). The 1Click deposit address and NEAR tx hash are stored with each payout.</p>
+            <p>Every payout is a NEAR Intents 1Click order funded from the treasury balance: ZEC→SOL, ZEC→ZEC on Solana, ZEC→USDC, ZEC→NEAR, or ZEC→Zcash (transparent t-address). The 1Click deposit address and NEAR tx hash are stored with each payout.</p>
             <div className="state ok">1click · verified with dry quotes</div>
           </div>
         </div>

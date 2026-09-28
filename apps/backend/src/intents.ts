@@ -205,5 +205,6 @@ export async function mtTransfer(receiverId: string, tokenId: string, amountRaw:
   return res.transaction.hash as string;
 }
 
-/** Transparent (t1/t3, base58) or unified (u1, bech32m) Zcash address. Checksums are validated by 1Click at quote time. */
-export const isZcashAddress = (a: string) => /^(t[13][1-9A-HJ-NP-Za-km-z]{33}|u1[02-9ac-hj-np-z]{40,})$/.test(a);
+/** Transparent (t1/t3, base58) Zcash address; unified (u1, bech32m) only when ALLOW_UNIFIED_ZEC=true. Checksums are validated by 1Click at quote time. */
+export const isZcashAddress = (a: string) =>
+  /^t[13][1-9A-HJ-NP-Za-km-z]{33}$/.test(a) || (config.allowUnifiedZec && /^u1[02-9ac-hj-np-z]{40,}$/.test(a));

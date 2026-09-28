@@ -31,6 +31,18 @@ export function vaultKeypair(): Keypair {
   return _vault;
 }
 export const mintPk = () => new PublicKey(config.mint);
+export const TOKEN_2022_PROGRAM_ID = new PublicKey('TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb');
+
+let _tokenProgram: PublicKey | null = null;
+/** The token program that owns the mint. pump.fun mints are Token-2022 since 2026; older SPL mints still work. */
+export async function getTokenProgram(): Promise<PublicKey> {
+  if (_tokenProgram) return _tokenProgram;
+  const info = await connection.getAccountInfo(mintPk(), 'confirmed');
+  if (!info) throw new Error(`mint ${config.mint} not found`);
+  _tokenProgram = info.owner;
+  L.info(`mint owned by ${info.owner.equals(TOKEN_2022_PROGRAM_ID) ? 'Token-2022' : info.owner.equals(TOKEN_PROGRAM_ID) ? 'SPL Token' : info.owner.toBase58()}`);
+  return _tokenProgram;
+}
 
 export async function getMintSupply(): Promise<{ supplyRaw: bigint; decimals: number }> {
   const s = await connection.getTokenSupply(mintPk(), 'confirmed');
@@ -88,7 +100,7 @@ export async function parseBurnTx(signature: string): Promise<BurnInfo> {
   let memo: string | null = null;
   for (const ix of all) {
     if (!isParsed(ix)) continue;
-    if (ix.program === 'spl-token' && (ix.parsed?.type === 'burn' || ix.parsed?.type === 'burnChecked')) {
+    if ((ix.program === 'spl-token' || ix.program === 'spl-token-2022') && (ix.parsed?.type === 'burn' || ix.parsed?.type === 'burnChecked')) {
       const info = ix.parsed.info;
       if (info.mint !== mint) continue;
       const a = BigInt(info.amount ?? info.tokenAmount?.amount ?? '0');
@@ -106,20 +118,25 @@ export async function parseBurnTx(signature: string): Promise<BurnInfo> {
 /**
  * Every token account of our mint, aggregated per owner.
  * Off-curve owners (PDAs: bonding curve, PumpSwap/Raydium pools, programs) are not eligible.
- * Requires an RPC that allows getProgramAccounts (Helius / Triton / QuickNode).
+ *
+ * Queries whichever token program owns the mint (Token-2022 for current pump.fun coins). No dataSize
+ * filter: Token-2022 accounts carry extensions and are longer than 165 bytes. The data slice keeps the
+ * response small (owner + amount only), which the public mainnet RPC accepts.
  */
 export async function snapshotHolders(): Promise<Map<string, bigint>> {
-  const accounts = await connection.getProgramAccounts(TOKEN_PROGRAM_ID, {
+  const program = await getTokenProgram();
+  const accounts = await connection.getProgramAccounts(program, {
     commitment: 'confirmed',
-    dataSlice: { offset: 0, length: 72 },
-    filters: [{ dataSize: 165 }, { memcmp: { offset: 0, bytes: config.mint } }],
+    dataSlice: { offset: 32, length: 40 }, // owner (32) + amount (8)
+    filters: [{ memcmp: { offset: 0, bytes: config.mint } }],
   });
   const out = new Map<string, bigint>();
   const excluded = new Set(config.excludeOwners);
   for (const { account } of accounts) {
     const d = account.data as Buffer;
-    const owner = new PublicKey(d.subarray(32, 64));
-    const amount = d.readBigUInt64LE(64);
+    if (d.length < 40) continue;
+    const owner = new PublicKey(d.subarray(0, 32));
+    const amount = d.readBigUInt64LE(32);
     if (amount === 0n) continue;
     const o = owner.toBase58();
     if (excluded.has(o)) continue;

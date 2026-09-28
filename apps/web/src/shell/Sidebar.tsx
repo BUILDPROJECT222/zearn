@@ -16,7 +16,7 @@ const I = {
 const NAV: { id: PageId; label: string }[] = [
   { id: 'dashboard', label: 'Dashboard' },
   { id: 'vault', label: 'Vault' },
-  { id: 'redeem', label: 'Redeem' },
+  { id: 'redeem', label: 'Emergency exit' },
   { id: 'hold', label: 'Hold' },
   { id: 'how', label: 'How it works' },
   { id: 'ledger', label: 'Ledger' },
