@@ -1,6 +1,6 @@
-# 10 content posts — mechanism, never zero, Zcash, NEAR
+# Content posts — mechanism, never zero, Zcash, NEAR
 
-Images: `01.png` … `10.png` (1600×900, X in-feed size). Every caption is under 280 characters.
+Images: `01.png` … `15.png` (1600×900, X in-feed size). Cards 11–15 come from `make-cards-2.mjs`. Every caption is under 280 characters.
 Suggested order: one or two per day, starting with 01. Pin 01 or the explainer video.
 
 ## 01 — Never zero (hook)
@@ -113,6 +113,71 @@ Don't trust, verify.
 The $ZEARN treasury is a public balance on intents.near. Every sweep, claim and burn is in the ledger, and the site checks ledger = on-chain balance live.
 
 Every ZEC is on the record.
+```
+
+## 11 — Start zearning
+Image: `11.png`
+```
+How to zearn in 3 steps:
+
+1. Buy $ZEARN on pump.fun
+2. Hold. ZEC accrues to your wallet every 5 minutes
+3. Claim in SOL, ZEC, USDC or NEAR
+
+No staking contract. No deposit. No approval.
+Your wallet balance is your position. 🛡️
+```
+
+## 12 — The flywheel
+Image: `12.png`
+```
+The $ZEARN flywheel:
+
+Trades pay creator fees.
+Fees become ZEC via NEAR Intents.
+ZEC backs the floor and pays holders.
+Holders give people a reason to stay.
+
+Volume feeds the vault. 🔁
+```
+
+## 13 — What moves the floor
+Image: `13.png`
+```
+What moves the $ZEARN floor?
+
+▲ Volume: every trade pays a fee, swept into ZEC
+▲ ZEC price up: same ZEC, more dollars
+▲ Redeem fees: 2% of every burn stays in the vault
+
+▼ ZEC price down: same ZEC, fewer dollars
+
+A floor made of Zcash moves with Zcash.
+```
+
+## 14 — Sleep 8 hours
+Image: `14.png`
+```
+gm holders ☀️
+
+Sleep 8 hours, wake up 100% unlocked.
+
+Hold Pool ZEC unlocks with the age of your bag: 5% at 15 min, 60% at 4 h, 100% at 8 h.
+
+Sell early and the locked part goes back to the pool.
+
+The laziest yield in crypto. 😴
+```
+
+## 15 — Sell or burn?
+Image: `15.png`
+```
+Sell or burn? Check the floor.
+
+Price above the floor → sell on pump.fun, the market pays more.
+Price below the floor → burn for ZEC, the vault pays more.
+
+Burning is the emergency exit, not the main door. And every dip under the floor is a burn trade for someone.
 ```
 
 ## Rules for all posts
