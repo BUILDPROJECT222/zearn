@@ -31,13 +31,13 @@ export default function Pipeline({ s }: { s: VaultState | null }) {
         <h3>SOL → ZEC via NEAR Intents</h3>
         <p>1Click swaps SOL to ZEC. The ZEC stays in a public intents.near account anyone can audit.</p>
       </div>
-      <div className="pipe split">
+      <div className="pipe floor-step">
         <div className="ico">{I.vault}</div>
         <div className="n">04 · {split}%</div>
         <h3>Floor Vault</h3>
         <p>Burn N tokens, receive N ÷ supply of the vault minus a {s ? s.params.redeemFeeBps / 100 : 2}% fee that stays behind. Redeem in-kind, no oracle.</p>
       </div>
-      <div className="pipe split2">
+      <div className="pipe hold-step">
         <div className="ico">{I.hold}</div>
         <div className="n">05 · {100 - split}%</div>
         <h3>Hold Pool</h3>

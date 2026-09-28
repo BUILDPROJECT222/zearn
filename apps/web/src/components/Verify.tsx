@@ -15,7 +15,7 @@ export default function Verify({ s }: { s: VaultState | null }) {
         </div>
         <span className={`tag ${dry ? 'warn' : ''}`}>{dry ? 'dry run · simulated' : 'live'}</span>
       </div>
-      <div className="split">
+      <div className="feesplit">
         <div style={{ width: `${(treasury * split) / 100}%`, background: 'var(--gold)' }} />
         <div style={{ width: `${(treasury * (100 - split)) / 100}%`, background: 'var(--green)' }} />
         <div style={{ width: `${ops}%`, background: 'var(--purple)' }} />
