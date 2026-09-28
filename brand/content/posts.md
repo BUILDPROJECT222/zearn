@@ -180,6 +180,42 @@ Price below the floor → burn for ZEC, the vault pays more.
 Burning is the emergency exit, not the main door. And every dip under the floor is a burn trade for someone.
 ```
 
+## How to claim (carousel)
+Images: `claim-1.png`, `claim-2.png`, `claim-3.png`, `claim-4.png` in that order, in one post (X allows 4 images).
+Cards come from `make-claim.mjs`. The balances on cards 2 and 4 are labelled as example numbers.
+
+Main post:
+```
+How to claim your $ZEARN Hold Pool ZEC 🛡️
+
+1. Open zearn-production.up.railway.app, go to Hold
+2. Connect your Solana wallet
+3. Pick how you get paid: SOL, ZEC, USDC or NEAR
+4. Sign the message and claim
+
+Free signature. No gas. Your tokens never leave your wallet.
+```
+
+Reply 1 (FAQ):
+```
+Claim FAQ:
+
+• Minimum claim ≈ $1 of ZEC
+• Only the unlocked part is claimable: 5% at 15 min, 100% at 8 h
+• Claim as often as you like
+• Status goes paying → paid, usually within a minute
+• Sell early and the still-locked part returns to the pool
+```
+
+Reply 2 (Zcash payouts):
+```
+Want real ZEC on Zcash?
+
+Pick "ZEC to a Zcash address" and paste a transparent t1… or t3… address. It arrives in about 2 min (bridge fee ≈ 0.0003 ZEC).
+
+Best for bigger claims, since the fee is fixed. Then shield it in your Zcash wallet. 🛡️
+```
+
 ## Rules for all posts
 - The Zcash and NEAR marks on the cards are neutral text badges, not the official logos; NEAR Intents and Zcash are the rails used, not partners.
 - Card 06 and 10 use example numbers (card 10 is labelled EXAMPLE); never present them as live figures.
