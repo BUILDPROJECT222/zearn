@@ -24,6 +24,8 @@ async function main() {
   const app = buildServer();
   await app.listen({ port: config.port, host: '0.0.0.0' });
   L.info(`API http://localhost:${config.port}  dryRun=${config.dryRun}  mint=${config.mint || '(not set)'}`);
+  // host only, never the query string (Helius puts the API key there)
+  L.info(`solana rpc: ${config.solanaRpc.replace(/^(https?:\/\/[^/?]+).*$/, '$1')}  near: ${config.nearAccountId ? `${config.nearAccountId.slice(0, 8)}…` : '(not set)'}  vault secret: ${config.vaultSolSecret ? 'set' : 'not set'}`);
 
   if (!config.mint) {
     L.warn('ZEARN_MINT is empty: keeper disabled, API only');
