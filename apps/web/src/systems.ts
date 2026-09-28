@@ -36,7 +36,7 @@ export function buildLog(sweeps: Sweep[], accruals: Accrual[], redeems: Redeem[]
     const sol = (Number(w.sol_lamports) / 1e9).toFixed(4);
     if (w.status === 'success')
       ev.push({ ts: w.created_at, who: 'bridge', tag: 'swap', text: `Swapped ${sol} SOL → ${zec(w.zec_raw, 4)} ZEC. ${zec(w.floor_raw, 4)} to the floor, ${zec(w.hold_raw, 4)} to the hold pool.`, ref: w.tx_sig ?? undefined, refUrl: w.tx_sig ? `https://solscan.io/tx/${w.tx_sig}` : undefined });
-    else if (w.status === 'dry') ev.push({ ts: w.created_at, who: 'keeper', tag: 'dry run', text: `Quoted ${sol} SOL → ${zec(w.zec_raw, 4)} ZEC. Nothing sent (DRY_RUN).` });
+    else if (w.status === 'dry') ev.push({ ts: w.created_at, who: 'keeper', tag: 'quote', text: `Quoted ${sol} SOL → ${zec(w.zec_raw, 4)} ZEC. Nothing sent.` });
     else ev.push({ ts: w.created_at, who: 'keeper', tag: w.status, text: `Sweep of ${sol} SOL is ${w.status}.` });
   }
   let emptyEpochShown = false;

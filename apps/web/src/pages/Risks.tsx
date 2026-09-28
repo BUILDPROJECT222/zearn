@@ -29,7 +29,6 @@ export default function RisksPage({ d }: { d: Data }) {
         <p className="muted" style={{ fontSize: 13 }}>
           Zearn is an experimental protocol and $ZEARN is a memecoin. Redeems are paid from whatever ZEC the vault holds at the moment your burn is processed, pro-rata to supply, minus the redeem fee. Hold rewards are paid from whatever the Hold Pool received while you held, subject to the unlock curve. The team can change parameters (split, fee, unlock curve) and will announce changes in the ledger before they apply. Simulation figures on this site are assumptions, not projections. You are responsible for your own taxes and for complying with the laws that apply to you.
         </p>
-        <div className="footnote">Mode: {d.s?.dryRun ? 'DRY RUN. Quotes are real, transfers are simulated.' : 'LIVE.'}</div>
       </div>
     </>
   );

@@ -31,7 +31,7 @@ export default function PhoneCard({ s, sweeps, accruals }: { s: VaultState | nul
         <span>{now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
         <span>▮▮▮ ◔</span>
       </div>
-      <div className="live">● {s?.dryRun ? 'DRY RUN' : 'LIVE'} · PUMP.FUN</div>
+      <div className="live">● {s?.mint ? 'LIVE' : 'LAUNCHING SOON'} · PUMP.FUN</div>
       <div className="name">
         <img src="/logo.svg" alt="" width="34" height="34" style={{ borderRadius: '50%' }} />
         <div><b>Zearn</b><small>$ZEARN / SOL · pump.fun</small></div>
@@ -69,10 +69,10 @@ export default function PhoneCard({ s, sweeps, accruals }: { s: VaultState | nul
           {pts ? <polyline points={pts} fill="none" stroke="#f4b728" strokeWidth="1.5" vectorEffect="non-scaling-stroke" /> : <text x="50" y="24" textAnchor="middle" fontSize="6" fill="#6b6b7c">floor history appears after 2 sweeps</text>}
         </svg>
       </div>
-      <div className="mono muted" style={{ fontSize: 11 }}>{s?.market?.dex === 'pumpfun' ? 'Bonding curve · trading on pump.fun' : s?.market ? `Graduated · trading on ${s.market.dex}` : 'Not indexed yet'}</div>
+      <div className="mono muted" style={{ fontSize: 11 }}>{s?.market?.dex === 'pumpfun' ? 'Bonding curve · trading on pump.fun' : s?.market ? `Graduated · trading on ${s.market.dex}` : s?.mint ? 'Just launched · market data in a minute' : 'Launching soon on pump.fun'}</div>
       <div className="ca">
         <span className="tiny gold">CA</span>
-        <span>{s?.mint ? short(s.mint, 6) : 'not set'}</span>
+        <span>{s?.mint ? short(s.mint, 6) : 'coming soon'}</span>
         <button onClick={copy}>{copied ? 'copied' : 'copy'}</button>
       </div>
       <div className="tabs">

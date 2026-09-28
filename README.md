@@ -125,7 +125,7 @@ The trade-off is custody: the keeper's Solana hot wallet and NEAR account sign e
    | `X_HANDLE` | unset | the X username |
 
 6. **Create the coin on pump.fun** with the new vault wallet as creator. Avoid a dev buy from the vault (it is excluded from hold rewards anyway).
-7. **Set `ZEARN_MINT`**, verify on-chain that the bonding-curve creator is the vault, then `DRY_RUN=false`.
+7. **Switch the site to the coin** with one command from `apps/backend`: `node scripts/launch.mjs <CA>`. It checks the Railway secrets belong to the new vault and NEAR account (without printing them), the NEAR account and vault balances, and on-chain that the mint is Token-2022, 1B supply, 6 decimals, mint and freeze authority revoked, and that the pump.fun creator is the vault. Only if everything passes does it set `ZEARN_MINT` and `DRY_RUN=false` in a single redeploy and wait for the site to go live. `--preflight` runs the checks without a CA; `--check-only` never changes anything.
 8. **After launch:** claim creator fees on pump.fun regularly (the keeper sweeps them within one interval), watch `ledgerMatchesOnChain` on the dashboard, and review any payout with status `failed` and `retry_safe=0`.
 
 ## Restarts and failed payouts

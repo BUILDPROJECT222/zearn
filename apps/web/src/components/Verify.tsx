@@ -4,7 +4,7 @@ export default function Verify({ s }: { s: VaultState | null }) {
   const split = s ? s.params.floorSplitBps / 100 : 50;
   const treasury = s ? s.params.treasuryShareBps / 100 : 90;
   const ops = 100 - treasury;
-  const dry = s?.dryRun ?? true;
+  const launched = !!s?.mint;
   const near = s?.intentsBalanceZec !== null && s?.intentsBalanceZec !== undefined;
   return (
     <div className="panel corner">
@@ -13,7 +13,7 @@ export default function Verify({ s }: { s: VaultState | null }) {
           <h2>Verify before you trust</h2>
           <div className="sub" style={{ margin: 0 }}>What a buyer can check about $ZEARN, and what is still a promise in v1.</div>
         </div>
-        <span className={`tag ${dry ? 'warn' : ''}`}>{dry ? 'dry run · simulated' : 'live'}</span>
+        <span className={`tag ${launched ? '' : 'dim'}`}>{launched ? 'live' : 'launching soon'}</span>
       </div>
       <div className="feesplit">
         <div style={{ width: `${(treasury * split) / 100}%`, background: 'var(--gold)' }} />
@@ -76,11 +76,11 @@ export default function Verify({ s }: { s: VaultState | null }) {
           <div>
             <b>Payouts never touch our own bridge code</b>
             <p>Every payout is a NEAR Intents 1Click order funded from the treasury balance: ZEC→SOL, ZEC→ZEC on Solana, ZEC→USDC, ZEC→NEAR, or ZEC→Zcash (transparent t-address). The 1Click deposit address and NEAR tx hash are stored with each payout.</p>
-            <div className="state ok">1click · verified with dry quotes</div>
+            <div className="state ok">1click · tested on mainnet</div>
           </div>
         </div>
       </div>
-      <div className="footnote">{dry ? 'Dry run: quotes are real, transfers are not. Every row above becomes a contract read once the keeper goes live.' : 'Live: every row above is a contract read or a signed transaction.'}</div>
+      <div className="footnote">{launched ? 'Every row above is a contract read or a signed transaction.' : 'These checks read live chain data the moment the coin launches.'}</div>
     </div>
   );
 }

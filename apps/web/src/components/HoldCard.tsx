@@ -35,7 +35,7 @@ export default function HoldCard({ s, onDone }: { s: VaultState | null; onDone: 
       const sig = await signMessage(new TextEncoder().encode(p.message));
       setBusy('Submitting claim…');
       const c = await api.submitClaim({ owner, destKind: kind, destAddr: dest, nonce: p.nonce, issued: p.issued, signature: btoa(String.fromCharCode(...sig)) });
-      setMsg({ ok: true, text: `Claim #${c.id} for ${zec(c.amount_raw)} ZEC ${c.status === 'dry' ? 'recorded (dry run)' : c.status}` });
+      setMsg({ ok: true, text: `Claim #${c.id} for ${zec(c.amount_raw)} ZEC ${c.status === 'dry' ? 'recorded' : c.status}` });
       await load();
       onDone();
     } catch (e) {

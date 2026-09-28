@@ -23,7 +23,11 @@ export default function Dashboard({ d }: { d: Data }) {
               $ZEARN is a pump.fun coin whose creator fees become ZEC in a public treasury on NEAR Intents. Every trade fills the vault, the vault holds the floor. Hold to unlock ZEC rewards. If the price ever dumps below the floor, burn and walk away with ZEC. No trading desk, no APY promises.
             </p>
             <div className="cta">
-              <a className="btn gold" href={s?.mint ? `https://pump.fun/coin/${s.mint}` : '#'} target="_blank" rel="noreferrer">Buy on pump.fun →</a>
+              {s?.mint ? (
+                <a className="btn gold" href={`https://pump.fun/coin/${s.mint}`} target="_blank" rel="noreferrer">Buy on pump.fun →</a>
+              ) : (
+                <span className="btn gold" style={{ opacity: 0.75, cursor: 'default' }}>Launching soon on pump.fun</span>
+              )}
               <button className="btn" onClick={() => d.go('hold')}>Hold rewards</button>
               <button className="btn" onClick={() => d.go('how')}>How it works</button>
             </div>

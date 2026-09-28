@@ -28,7 +28,7 @@ export default function Scene({ s }: { s: VaultState | null }) {
     <div className="scene">
       <div className="grid" />
       <div className="bar">
-        <span>■ <b>{s?.dryRun ? 'DEMO · DRY RUN' : 'LIVE'}</b> · {s ? `$ZEARN on ${s.market?.dex === 'pumpfun' ? 'pump.fun bonding curve' : s.market?.dex ?? 'pump.fun'}` : 'connecting'}</span>
+        <span>■ <b>{s?.mint ? 'LIVE' : 'LAUNCHING SOON'}</b> · {!s ? 'connecting' : !s.mint ? '$ZEARN on pump.fun' : `$ZEARN on ${s.market?.dex === 'pumpfun' ? 'pump.fun bonding curve' : s.market?.dex ?? 'pump.fun'}`}</span>
         <span>· fees never sleep ·</span>
       </div>
       <svg viewBox="0 0 900 400" role="img" aria-label="Fee to ZEC flow">

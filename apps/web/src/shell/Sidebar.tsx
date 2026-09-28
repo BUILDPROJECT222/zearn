@@ -35,7 +35,7 @@ export default function Sidebar({ page, go, d }: { page: PageId; go: (p: PageId)
           <a key={n.id} href={`#/${n.id}`} className={page === n.id ? 'on' : ''} onClick={(e) => { e.preventDefault(); go(n.id); }}>
             {I[n.id]}
             {n.label}
-            {n.id === 'vault' && d.s && <span className={`tag ${d.s.dryRun ? 'warn' : ''}`}>{d.s.dryRun ? 'dry' : 'live'}</span>}
+            {n.id === 'vault' && d.s && <span className={`tag ${d.s.mint ? '' : 'dim'}`}>{d.s.mint ? 'live' : 'soon'}</span>}
             {n.id === 'redeem' && d.s?.arbGapPct != null && d.s.arbGapPct > 0 && <span className="tag">arb</span>}
           </a>
         ))}
