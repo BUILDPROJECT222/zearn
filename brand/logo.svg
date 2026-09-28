@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="38%" r="70%">
+      <stop offset="0" stop-color="#1b1710" />
+      <stop offset="0.55" stop-color="#0d0c0e" />
+      <stop offset="1" stop-color="#08080b" />
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffe08a" />
+      <stop offset="0.5" stop-color="#f4b728" />
+      <stop offset="1" stop-color="#c98a10" />
+    </linearGradient>
+    <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffd76a" />
+      <stop offset="0.5" stop-color="#b8860b" />
+      <stop offset="1" stop-color="#ffd76a" />
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-200%" width="200%" height="500%">
+      <feGaussianBlur stdDeviation="7" result="b" />
+      <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+    </filter>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)" />
+  <!-- coin ring -->
+  <circle cx="200" cy="200" r="168" fill="none" stroke="url(#ring)" stroke-width="9" />
+  <circle cx="200" cy="200" r="152" fill="none" stroke="#f4b728" stroke-opacity="0.18" stroke-width="2" />
+  <!-- the Z -->
+  <path d="M128 106 H272 V136 L172 244 H272 V274 H128 V244 L228 136 H128 Z" fill="url(#gold)" />
+  <!-- the floor it stands on -->
+  <rect x="104" y="294" width="192" height="12" rx="6" fill="#ffd76a" filter="url(#glow)" />
+  <rect x="104" y="294" width="192" height="12" rx="6" fill="#ffe9a8" />
+</svg>
