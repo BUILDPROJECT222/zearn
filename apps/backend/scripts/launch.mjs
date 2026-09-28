@@ -84,7 +84,7 @@ if (v.VAULT_SOL_SECRET) {
 if (v.NEAR_ACCOUNT_ID && v.NEAR_PRIVATE_KEY) {
   try {
     const pub = KeyPair.fromString(v.NEAR_PRIVATE_KEY.trim()).getPublicKey().toString();
-    const r = await fetch('https://rpc.mainnet.near.org', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'query', params: { request_type: 'view_access_key', finality: 'final', account_id: v.NEAR_ACCOUNT_ID, public_key: pub } }) }).then((x) => x.json());
+    const r = await fetch('https://rpc.mainnet.fastnear.com', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'query', params: { request_type: 'view_access_key', finality: 'final', account_id: v.NEAR_ACCOUNT_ID, public_key: pub } }) }).then((x) => x.json());
     if (r.result?.permission === 'FullAccess') ok(`NEAR_PRIVATE_KEY is a full-access key of ${v.NEAR_ACCOUNT_ID.slice(0, 12)}…`);
     else bad(`NEAR_PRIVATE_KEY is not a full-access key of NEAR_ACCOUNT_ID (${r.error?.cause?.name ?? 'no such key'}); fund the account first if it is new`);
   } catch (e) {
@@ -97,7 +97,7 @@ if (v.NEAR_ACCOUNT_ID && v.NEAR_PRIVATE_KEY) {
 
 const nearId = v.NEAR_ACCOUNT_ID || near.NEAR_ACCOUNT_ID;
 if (nearId) {
-  const r = await fetch('https://rpc.mainnet.near.org', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'query', params: { request_type: 'view_account', finality: 'final', account_id: nearId } }) }).then((x) => x.json());
+  const r = await fetch('https://rpc.mainnet.fastnear.com', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'query', params: { request_type: 'view_account', finality: 'final', account_id: nearId } }) }).then((x) => x.json());
   if (r.result) {
     const bal = Number(BigInt(r.result.amount) / 10n ** 20n) / 1e4;
     (bal >= 0.5 ? ok : bad)(`NEAR treasury active, ${bal} NEAR`);
@@ -107,7 +107,7 @@ if (nearId) {
 let treasuryZecRaw = 0n;
 if (nearId) {
   const args_ = Buffer.from(JSON.stringify({ account_id: nearId, token_ids: ['nep141:zec.omft.near'] })).toString('base64');
-  const r = await fetch('https://rpc.mainnet.near.org', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'query', params: { request_type: 'call_function', finality: 'final', account_id: 'intents.near', method_name: 'mt_batch_balance_of', args_base64: args_ } }) }).then((x) => x.json());
+  const r = await fetch('https://rpc.mainnet.fastnear.com', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'query', params: { request_type: 'call_function', finality: 'final', account_id: 'intents.near', method_name: 'mt_batch_balance_of', args_base64: args_ } }) }).then((x) => x.json());
   if (r.result) treasuryZecRaw = BigInt(JSON.parse(Buffer.from(r.result.result).toString())[0] ?? '0');
   if (treasuryZecRaw > 0n) info(`treasury already holds ${Number(treasuryZecRaw) / 1e8} ZEC on intents.near (${treasuryZecRaw} zatoshi)`);
   else ok('treasury ZEC balance is 0, the fresh ledger will match');

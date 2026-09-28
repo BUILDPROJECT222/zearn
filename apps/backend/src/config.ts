@@ -39,7 +39,8 @@ export const config = {
 
   // NEAR / Intents
   nearNetwork: env('NEAR_NETWORK', 'mainnet'),
-  nearRpc: env('NEAR_RPC_URL', 'https://rpc.mainnet.near.org'),
+  // rpc.mainnet.near.org is deprecated and returns 429s; FastNEAR is the recommended public endpoint
+  nearRpc: env('NEAR_RPC_URL', 'https://rpc.mainnet.fastnear.com'),
   nearAccountId: env('NEAR_ACCOUNT_ID'),
   nearPrivateKey: env('NEAR_PRIVATE_KEY'),
   oneClickUrl: env('ONECLICK_URL', 'https://1click.chaindefuser.com'),
