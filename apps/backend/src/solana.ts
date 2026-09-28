@@ -132,6 +132,8 @@ export async function snapshotHolders(): Promise<Map<string, bigint>> {
   });
   const out = new Map<string, bigint>();
   const excluded = new Set(config.excludeOwners);
+  // the protocol's own vault wallet (e.g. from a dev buy at launch) never earns hold rewards
+  if (config.vaultSolSecret) excluded.add(vaultKeypair().publicKey.toBase58());
   for (const { account } of accounts) {
     const d = account.data as Buffer;
     if (d.length < 40) continue;
