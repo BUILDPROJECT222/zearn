@@ -219,10 +219,10 @@ Every word you'll see on the site, on one card. Bookmark it for the next time so
 ## 19 — Myth vs fact
 Image: `19.png`
 ```
-4 things people get wrong about $ZEARN:
+4 things people get wrong about $ZEARN
 
 ❌ You have to stake → ✅ just hold
-❌ The floor is a fixed price → ✅ it's ZEC per token, it moves with ZEC
+❌ The floor is a fixed price → ✅ it moves with ZEC
 ❌ Sell early, lose everything → ✅ only the locked share goes back
 ❌ Burning is the exit → ✅ selling is, burn is the emergency exit
 ```
