@@ -29,7 +29,7 @@ export default function Sidebar({ page, go, d }: { page: PageId; go: (p: PageId)
   const working = Object.values(st).filter((x) => x.status === 'working').length;
   return (
     <aside className="sidebar">
-      <div className="logo"><i>Z</i>ZEARN</div>
+      <div className="logo"><img src="/logo.svg" alt="" width="34" height="34" />ZEARN</div>
       <div className="nav">
         {NAV.map((n) => (
           <a key={n.id} href={`#/${n.id}`} className={page === n.id ? 'on' : ''} onClick={(e) => { e.preventDefault(); go(n.id); }}>

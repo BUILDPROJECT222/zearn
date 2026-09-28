@@ -5,7 +5,7 @@
 | Avatar | `logo-400.png` (400×400; X crops it to a circle, the ring is inside the safe area) |
 | Header | `banner-1500x500.png` (use `banner-3000x1000.png` if X accepts it; the bottom-left is left empty for the avatar). Copy: "The memecoin with a ZEC floor. Every $ZEARN trade stacks Zcash in a public vault via NEAR Intents. Hold to zearn. Never zero." with a drawn shield icon |
 | Name | `Zearn $ZEARN` |
-| Handle ideas | `@zearnfun`, `@zearn_zec`, `@zearnvault` |
+| Handle | `@zearnvault` (https://x.com/zearnvault) |
 | Website | https://zearn-production.up.railway.app (switch to a custom domain once it exists) |
 | Location | `intents.near` |
 

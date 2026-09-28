@@ -33,7 +33,7 @@ export default function PhoneCard({ s, sweeps, accruals }: { s: VaultState | nul
       </div>
       <div className="live">● {s?.dryRun ? 'DRY RUN' : 'LIVE'} · PUMP.FUN</div>
       <div className="name">
-        <i>Z</i>
+        <img src="/logo.svg" alt="" width="34" height="34" style={{ borderRadius: '50%' }} />
         <div><b>Zearn</b><small>$ZEARN / SOL · pump.fun</small></div>
       </div>
       <div className="price">

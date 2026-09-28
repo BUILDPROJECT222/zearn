@@ -41,7 +41,7 @@ button { font: inherit; }
 .shell > div, .hq > div, .logwrap > div, .panel-grid > div, .two > div, .three > div { min-width: 0; }
 .sidebar { position: sticky; top: 0; height: 100vh; background: var(--bg2); border-right: 1px solid var(--line); display: flex; flex-direction: column; padding: 16px 12px; gap: 6px; overflow: hidden; }
 .sidebar .logo { display: flex; align-items: center; gap: 10px; padding: 6px 8px 18px; font-family: var(--pixel); font-size: 22px; font-weight: 700; white-space: nowrap; }
-.sidebar .logo i { width: 30px; height: 30px; display: grid; place-items: center; background: var(--gold); color: #000; border-radius: 8px; font-style: normal; font-family: var(--tiny); font-size: 14px; box-shadow: 0 0 20px rgba(244,183,40,0.4); image-rendering: pixelated; }
+.sidebar .logo img { width: 34px; height: 34px; border-radius: 50%; box-shadow: 0 0 20px rgba(244,183,40,0.35); flex: none; }
 .nav a { display: flex; align-items: center; gap: 10px; padding: 10px 10px; border-radius: 10px; color: var(--ink2); font-family: var(--pixel); font-size: 15px; border: 1px solid transparent; }
 .nav a:hover { color: var(--ink); background: var(--panel); text-decoration: none; }
 .nav a.on { color: var(--gold); background: var(--gold-dim); border-color: rgba(244,183,40,0.35); }

@@ -1,4 +1,5 @@
 // Requires: npm i @resvg/resvg-js@2 (run from a folder where it is installed) and ffmpeg on PATH. Windows fonts: Segoe UI, Consolas.
+// Usage: node make-video.mjs square|landscape [keyframes t1 t2 ...]
 // Zearn mechanism explainer: 1080x1080, 30 fps, ~46 s. Every frame is an SVG rendered with resvg, piped into ffmpeg.
 // Usage: node video.mjs            -> full MP4
 //        node video.mjs keyframes  -> a contact sheet of key moments for review
@@ -70,7 +71,8 @@ const S = [];
 
 // 1. hook: most memecoins go to zero
 S.push({ d: 4.5, draw(lt) {
-  let o = line([['Most memecoins', C.ink]], 215, 80, lt, 0.1) + line([['go to zero.', C.red]], 305, 80, lt, 0.5);
+  const cap = line([['Most memecoins', C.ink]], 215, 80, lt, 0.1) + line([['go to zero.', C.red]], 305, 80, lt, 0.5);
+  let o = '';
   const X0 = 150, X1 = 930;
   const yAt = (u) => {
     const base = u < 0.22 ? lerp(560, 440, u / 0.22) : u < 0.9 ? lerp(440, 845, Math.pow((u - 0.22) / 0.68, 1.6)) : 848;
@@ -89,7 +91,7 @@ S.push({ d: 4.5, draw(lt) {
   }
   const b = eBack(seg(lt, 3.0, 3.4));
   if (b > 0) o += `<g transform="translate(820 470) scale(${f(b, 3)})">${box(-110, -44, 220, 88, C.red, '#2a1113', 3, 16)}<text x="0" y="17" font-family="Segoe UI" font-weight="900" font-size="46" text-anchor="middle" fill="${C.red}">-99.9%</text></g>`;
-  return o;
+  return { cap, vis: o };
 } });
 
 // 2. $ZEARN has a floor: the Z drops onto a glowing floor
@@ -108,14 +110,15 @@ S.push({ d: 4.6, draw(lt) {
     const a = (i / 10) * Math.PI - Math.PI, r = 40 + 190 * eOut(dp);
     o += `<circle cx="${f(540 + Math.cos(a) * r * 1.4)}" cy="${f(700 + Math.sin(a) * r * 0.25)}" r="${f(7 * (1 - dp))}" fill="${C.gold2}" opacity="${f(1 - dp, 3)}"/>`;
   }
-  o += line([['$ZEARN ', C.ink], ['has a floor.', C.gold]], 200, 82, lt, 1.65, { glow: true });
+  const cap = line([['$ZEARN ', C.ink], ['has a floor.', C.gold]], 200, 82, lt, 1.65, { glow: true });
   o += line([['Backed by ZEC in a public vault.', C.ink2]], 810, 36, lt, 2.3, { weight: 700 });
-  return o;
+  return { cap, vis: o, capC: 175, visC: 590, capS: 0.95 };
 } });
 
 // 3. every trade pays a creator fee
 S.push({ d: 6.2, draw(lt) {
-  let o = line([['Every trade pays', C.ink]], 160, 70, lt, 0.1) + line([['a creator fee.', C.gold]], 245, 70, lt, 0.4);
+  const cap = line([['Every trade pays', C.ink]], 160, 70, lt, 0.1) + line([['a creator fee.', C.gold]], 245, 70, lt, 0.4);
+  let o = '';
   // pump.fun terminal with live candles
   o += box(80, 380, 360, 330) + mono('PUMP.FUN', 260, 750, 26, C.ink2);
   for (let i = 0; i < 9; i++) {
@@ -144,12 +147,13 @@ S.push({ d: 6.2, draw(lt) {
   o += mono(`fees: ${f(landed * 0.012, 3)} SOL`, 820, 475, 24, C.ink, 'middle', seg(lt, 0.8, 1.1) * (1 - sweep));
   o += line([['0.30% – 0.95% of every buy and sell', C.ink2]], 815, 32, lt, 1.2, { weight: 700 });
   o += line([['A keeper sweeps it every 5 minutes →', C.gold]], 880, 34, lt, 4.5, { weight: 800 });
-  return o;
+  return { cap, vis: o };
 } });
 
 // 4. fees become ZEC via NEAR Intents
 S.push({ d: 6.2, draw(lt) {
-  let o = line([['Fees become ', C.ink], ['ZEC', C.gold]], 160, 74, lt, 0.1) + line([['via NEAR Intents', C.blue]], 245, 62, lt, 0.4);
+  const cap = line([['Fees become ', C.ink], ['ZEC', C.gold]], 160, 74, lt, 0.1) + line([['via NEAR Intents', C.blue]], 245, 62, lt, 0.4);
+  let o = '';
   // portal
   const pulse = 1 + 0.06 * Math.sin(lt * 6);
   o += `<g transform="translate(540 600) scale(${f(pulse, 3)})"><path d="M-95 110 V-10 A95 95 0 0 1 95 -10 V110" fill="none" stroke="${C.blue}" stroke-width="16"/><path d="M-72 110 V-6 A72 72 0 0 1 72 -6 V110" fill="#0a0a0e" stroke="${C.line}" stroke-width="2"/></g>`;
@@ -175,12 +179,13 @@ S.push({ d: 6.2, draw(lt) {
   o += mono('ZEC VAULT', 890, 790, 24, C.gold);
   o += flights.join('');
   o += line([['Public balance. Anyone can check it.', C.ink2]], 880, 34, lt, 4.2, { weight: 700 });
-  return o;
+  return { cap, vis: o };
 } });
 
 // 5. the split: floor and hold pool
 S.push({ d: 5.4, draw(lt) {
-  let o = line([['Half becomes the ', C.ink], ['floor.', C.gold]], 155, 62, lt, 0.1) + line([['Half pays the ', C.ink], ['holders.', C.green]], 235, 62, lt, 0.5);
+  const cap = line([['Half becomes the ', C.ink], ['floor.', C.gold]], 155, 62, lt, 0.1) + line([['Half pays the ', C.ink], ['holders.', C.green]], 235, 62, lt, 0.5);
+  let o = '';
   const drain = eInOut(seg(lt, 1.0, 3.4));
   o += box(440, 320, 200, 200, C.gold, '#15130c', 3);
   o += `<rect x="452" y="${f(508 - 176 * (1 - drain) * 0.95)}" width="176" height="${f(176 * (1 - drain) * 0.95)}" rx="10" fill="url(#gold)"/>`;
@@ -200,15 +205,17 @@ S.push({ d: 5.4, draw(lt) {
   };
   o += tank(180, C.gold, 'url(#gold)', 'FLOOR 50%', 'burn → take ZEC', 1.6);
   o += tank(640, C.green, C.green, 'HOLD 50%', 'hold → unlock ZEC', 1.9);
-  return o;
+  return { cap, vis: o, visC: 625 };
 } });
 
 // 6. hold to unlock + paper hands pay diamond hands
 S.push({ d: 8.4, draw(lt) {
   let o = '';
+  let cap = '';
   const A = 1 - seg(lt, 3.7, 4.1);
   if (A > 0) {
-    let a = line([['Hold to ', C.ink], ['unlock.', C.gold]], 170, 80, lt, 0.1) + line([['The longer you hold, the more you claim.', C.ink2]], 245, 34, lt, 0.4, { weight: 700 });
+    cap += `<g opacity="${f(A, 3)}">${line([['Hold to ', C.ink], ['unlock.', C.gold]], 170, 80, lt, 0.1)}${line([['The longer you hold, the more you claim.', C.ink2]], 245, 34, lt, 0.4, { weight: 700 })}</g>`;
+    let a = '';
     const ticks = [[0.12, '15m', 5], [0.36, '1h', 20], [0.66, '4h', 60], [1.0, '8h', 100]];
     const p = eInOut(seg(lt, 0.7, 3.3));
     const X0 = 150, X1 = 930;
@@ -230,7 +237,8 @@ S.push({ d: 8.4, draw(lt) {
   const B = seg(lt, 4.0, 4.4);
   if (B > 0) {
     const bt = lt - 4.0;
-    let b = line([['Sell early?', C.ink]], 150, 64, bt, 0.0) + line([['Your locked ZEC goes to', C.ink]], 225, 50, bt, 0.25) + line([['the diamond hands.', C.gold]], 290, 50, bt, 0.45, { glow: true });
+    cap += `<g opacity="${f(B, 3)}">${line([['Sell early?', C.ink]], 150, 64, bt, 0.0)}${line([['Your locked ZEC goes to', C.ink]], 225, 50, bt, 0.25)}${line([['the diamond hands.', C.gold]], 290, 50, bt, 0.45, { glow: true })}</g>`;
+    let b = '';
     // paper hands card
     const sold = seg(bt, 0.8, 1.1);
     b += box(90, 380, 400, 420, sold > 0 ? C.red : C.line);
@@ -258,17 +266,18 @@ S.push({ d: 8.4, draw(lt) {
     }
     o += `<g opacity="${f(B, 3)}">${b}</g>`;
   }
-  return o;
+  return { cap, vis: o, visC: 650 };
 } });
 
 // 7. emergency exit: dump below the floor, bots burn, price bounces back
 S.push({ d: 7.6, draw(lt) {
   const second = seg(lt, 3.6, 4.0);
   let o = '';
-  if (second < 1) o += `<g opacity="${f(1 - second, 3)}">${line([['Price dumps', C.ink]], 160, 72, lt, 0.1)}${line([['below the floor?', C.red]], 245, 72, lt, 0.4)}</g>`;
+  let cap = '';
+  if (second < 1) cap += `<g opacity="${f(1 - second, 3)}">${line([['Price dumps', C.ink]], 160, 72, lt, 0.1)}${line([['below the floor?', C.red]], 245, 72, lt, 0.4)}</g>`;
   if (second > 0) {
     const bt = lt - 3.6;
-    o += line([['Burn → take your ZEC.', C.gold]], 160, 64, bt, 0.1, { glow: true }) + line([['Arb bots buy it back up.', C.ink]], 240, 56, bt, 0.4);
+    cap += line([['Burn → take your ZEC.', C.gold]], 160, 64, bt, 0.1, { glow: true }) + line([['Arb bots buy it back up.', C.ink]], 240, 56, bt, 0.4);
   }
   const X0 = 110, X1 = 960, FLOOR = 700;
   // glow as a rect (a filter on a zero-height line has an empty region and would hide it)
@@ -296,7 +305,7 @@ S.push({ d: 7.6, draw(lt) {
     o += `<g opacity="${f(bots, 3)}" transform="translate(${bx} ${f(by)})"><rect x="-26" y="-22" width="52" height="44" rx="10" fill="${C.panel}" stroke="${C.purple}" stroke-width="3"/><rect x="-14" y="-8" width="9" height="9" fill="${C.purple}"/><rect x="5" y="-8" width="9" height="9" fill="${C.purple}"/><rect x="-3" y="-36" width="6" height="14" fill="${C.purple}"/></g>`;
   }
   o += mono('ARB BOTS: BUY + BURN', 560, 965, 24, C.purple, 'middle', bots);
-  return o;
+  return { cap, vis: o, capC: 205, visC: 690 };
 } });
 
 // 8. outro
@@ -304,13 +313,13 @@ S.push({ d: 5.2, draw(lt) {
   const s = eBack(seg(lt, 0.0, 0.7));
   let o = '';
   if (s > 0) o += `<g transform="translate(540 360) scale(${f(s, 3)}) translate(-200 -200)"><circle cx="200" cy="200" r="168" fill="#0d0c0e" stroke="url(#ring)" stroke-width="9"/><path d="${ZPATH}" fill="url(#gold)"/><rect x="104" y="294" width="192" height="12" rx="6" fill="#ffe9a8" filter="url(#glow)"/></g>`;
-  o += line([['Hold to zearn.', C.ink]], 680, 80, lt, 0.6);
-  o += line([['Never zero.', C.gold]], 770, 80, lt, 0.9, { glow: true });
+  let cap = line([['Hold to zearn.', C.ink]], 680, 80, lt, 0.6);
+  cap += line([['Never zero.', C.gold]], 770, 80, lt, 0.9, { glow: true });
   const sh = seg(lt, 1.1, 1.5);
-  if (sh > 0) o += `<g opacity="${f(sh, 3)}">${shield(778, 712, 2.1 * eBack(sh))}</g>`;
-  o += mono('$ZEARN · PUMP.FUN × NEAR INTENTS × ZCASH', 540, 860, 26, C.ink2, 'middle', seg(lt, 1.4, 1.8));
-  o += mono('No APY. No promises. Not financial advice.', 540, 920, 20, C.ink3, 'middle', seg(lt, 1.8, 2.2));
-  return o;
+  if (sh > 0) cap += `<g opacity="${f(sh, 3)}">${shield(778, 712, 2.1 * eBack(sh))}</g>`;
+  cap += mono('$ZEARN · PUMP.FUN × NEAR INTENTS × ZCASH', 540, 860, 26, C.ink2, 'middle', seg(lt, 1.4, 1.8));
+  cap += mono('No APY. No promises. Not financial advice.', 540, 920, 20, C.ink3, 'middle', seg(lt, 1.8, 2.2));
+  return { cap, vis: o, capC: 790, visC: 360, capS: 1.05, visS: 1.35 };
 } });
 
 // ---------- timeline ----------
@@ -319,27 +328,50 @@ let acc = 0;
 for (const s of S) { starts.push(acc); acc += s.d; }
 const TOTAL = acc;
 
+// ---------- formats ----------
+// square: captions on top, visuals below (the original 1080 composition)
+// landscape: captions in a left column, visuals in a right column, each re-centred per scene
+const FORMATS = {
+  square: { w: 1080, h: 1080, file: 'zearn-explainer' },
+  landscape: { w: 1920, h: 1080, file: 'zearn-explainer-16x9' },
+};
+const fmtName = ['square', 'landscape'].includes(process.argv[2]) ? process.argv[2] : 'square';
+const FMT = FORMATS[fmtName];
+const bg = (w, h) => `<rect width="${w}" height="${h}" fill="${C.bg}"/><rect width="${w}" height="${h}" fill="url(#grid)"/><rect width="${w}" height="${h}" fill="url(#g1)"/><rect width="${w}" height="${h}" fill="url(#g2)"/>`;
+
 function frameSvg(t) {
   let i = S.length - 1;
   while (i > 0 && t < starts[i]) i--;
   const lt = t - starts[i], d = S[i].d;
   const fin = i === 0 ? 1 : seg(lt, 0, 0.3), fout = i === S.length - 1 ? 1 - seg(lt, d - 0.5, d) : 1 - seg(lt, d - 0.3, d);
-  const body = S[i].draw(lt);
+  const sc = S[i].draw(lt);
+  const { w, h } = FMT;
+  let body;
+  if (fmtName === 'square') body = sc.cap + sc.vis;
+  else {
+    const cs = sc.capS ?? 1.05, vs = sc.visS ?? 1.0;
+    const capC = sc.capC ?? 215, visC = sc.visC ?? 655;
+    const CX = 490, VX = 1400, MID = 540;
+    body =
+      `<g transform="translate(${f(CX - 540 * cs)} ${f(MID - capC * cs)}) scale(${cs})">${sc.cap}</g>` +
+      `<g transform="translate(${f(VX - 540 * vs)} ${f(MID + 20 - visC * vs)}) scale(${vs})">${sc.vis}</g>`;
+  }
   const prog = t / TOTAL;
+  const barW = w - 120;
   const chrome = `<text x="60" y="78" font-family="Consolas" font-weight="700" font-size="24" letter-spacing="3" fill="${C.gold}">$ZEARN</text>` +
-    `<rect x="60" y="1036" width="960" height="6" rx="3" fill="#fff" opacity="0.08"/><rect x="60" y="1036" width="${f(960 * prog)}" height="6" rx="3" fill="${C.gold}"/>`;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${DEFS}${BG}<g opacity="${f(Math.min(fin, fout), 3)}">${body}</g>${chrome}</svg>`;
+    `<rect x="60" y="${h - 44}" width="${barW}" height="6" rx="3" fill="#fff" opacity="0.08"/><rect x="60" y="${h - 44}" width="${f(barW * prog)}" height="6" rx="3" fill="${C.gold}"/>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${DEFS}${bg(w, h)}<g opacity="${f(Math.min(fin, fout), 3)}">${body}</g>${chrome}</svg>`;
 }
-const render = (t, width = W) => new Resvg(frameSvg(t), { font: FONT, fitTo: { mode: 'width', value: width } }).render().asPng();
+const render = (t, width = FMT.w) => new Resvg(frameSvg(t), { font: FONT, fitTo: { mode: 'width', value: width } }).render().asPng();
 
-if (process.argv[2] === 'keyframes') {
-  const ks = process.argv.slice(3).map(Number);
+if (process.argv[3] === 'keyframes') {
+  const ks = process.argv.slice(4).map(Number);
   const times = ks.length ? ks : [3.4, 6.7, 12.5, 17.8, 25.2, 29.0, 34.7, 38.2, 42.5, 47.5];
-  times.forEach((t, i) => writeFileSync(`${OUT}/kf-${String(i).padStart(2, '0')}.png`, render(Math.min(t, TOTAL - 0.01), 540)));
-  console.log(`total ${TOTAL.toFixed(1)} s, wrote ${times.length} keyframes`);
+  times.forEach((t, i) => writeFileSync(`${OUT}/kf-${String(i).padStart(2, '0')}.png`, render(Math.min(t, TOTAL - 0.01), Math.round(FMT.w / 2))));
+  console.log(`${fmtName}: total ${TOTAL.toFixed(1)} s, wrote ${times.length} keyframes`);
 } else {
   const frames = Math.round(TOTAL * FPS);
-  const ff = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-i', '-', '-c:v', 'libx264', '-preset', 'slow', '-crf', '18', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', `${OUT}/zearn-explainer.mp4`], { stdio: ['pipe', 'inherit', 'inherit'] });
+  const ff = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-i', '-', '-c:v', 'libx264', '-preset', 'slow', '-crf', '18', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', `${OUT}/${FMT.file}.mp4`], { stdio: ['pipe', 'inherit', 'inherit'] });
   const t0 = Date.now();
   for (let k = 0; k < frames; k++) {
     const png = render(k / FPS);
@@ -348,6 +380,6 @@ if (process.argv[2] === 'keyframes') {
   }
   ff.stdin.end();
   await new Promise((r) => ff.on('close', r));
-  writeFileSync(`${OUT}/zearn-explainer-poster.png`, render(TOTAL - 1.2));
+  writeFileSync(`${OUT}/${FMT.file}-poster.png`, render(TOTAL - 1.2));
   console.log(`done: ${frames} frames, ${TOTAL.toFixed(1)} s video in ${((Date.now() - t0) / 1000).toFixed(0)} s`);
 }
