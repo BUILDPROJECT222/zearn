@@ -117,7 +117,11 @@ if (RPC && vaultAddr) {
   const lamports = (await rpc(RPC, 'getBalance', [vaultAddr])).value;
   const sol = lamports / 1e9;
   (sol >= 0.03 ? ok : bad)(`vault wallet ${vaultAddr.slice(0, 6)}… holds ${sol} SOL (needs ~0.03+ for gas)`);
-  if (sol > 0.15) info(`note: once live, anything above the 0.05 SOL reserve and the 0.1 SOL threshold gets swept into ZEC`);
+  // once live, everything above the 0.05 SOL reserve is swept into ZEC and becomes protocol money
+  if (sol > 0.3 && !args.includes('--sweep-ok')) {
+    if (preflightOnly) info(`WARNING: ${sol} SOL in the vault; once live ~${(sol - 0.05).toFixed(3)} SOL is swept into the treasury. Move the excess out, or launch with --sweep-ok if that is intended.`);
+    else bad(`vault holds ${sol} SOL: going live would sweep ~${(sol - 0.05).toFixed(3)} SOL into the treasury. Move the excess out first, or pass --sweep-ok if it is meant as floor capital.`);
+  }
 }
 
 // ---------------- coin ----------------
