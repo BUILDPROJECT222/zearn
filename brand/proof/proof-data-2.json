@@ -1,0 +1,21 @@
+{
+  "generatedAt": "2026-09-28T14:35:30.802Z",
+  "openingZec": "0.01211416",
+  "treasuryNow": "0.10265601",
+  "treasuryX": "8.5",
+  "minutes": 44,
+  "sweepsZec": "0.09128618",
+  "paidZec": "0.00074433",
+  "effPct": "99.8",
+  "inUsd": "144.81",
+  "outUsd": "144.51",
+  "avgSecs": 47,
+  "burnPct": "2.1039",
+  "backingUp": "0.043",
+  "epochs": 9,
+  "poolIn": "0.06551965",
+  "owedNow": "0.04274706",
+  "holdersFirst": 74,
+  "holdersNow": 111,
+  "holdersPeak": 126
+}

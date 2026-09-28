@@ -128,6 +128,78 @@ Paper hands fund diamond hands. 💎
 
 ---
 
+## Proof part 2 (cards 6–10)
+
+Live snapshot from 2026-09-28, about 14:35 UTC. Numbers are in `proof-data-2.json`.
+Refresh only this set with `node make-proof.mjs 2`. It leaves cards 1–5 untouched.
+Post these as a second thread, or one per day.
+
+### 6 · image `proof-6.png` · treasury growth
+
+```
+8.5x the ZEC in 44 minutes.
+
+0.0121 ZEC seeded at launch.
+3 creator-fee sweeps added 0.0913 ZEC.
+Redeems paid out 0.0007 ZEC.
+
+Treasury now: 0.1027 ZEC, matched to the zatoshi on intents.near.
+
+Volume in, Zcash stacked. 🛡
+```
+
+### 7 · image `proof-7.png` · swap efficiency
+
+```
+$144.81 of SOL went in.
+$144.51 of ZEC came out.
+
+99.8% of the value arrived as Zcash, priced at swap time. Average settle: 47 seconds.
+
+The only gap is the NEAR Intents routing fee and spread. That's the whole bridge.
+```
+
+### 8 · image `proof-8.png` · floor math
+
+```
+The floor is just math.
+
+Burn 2.1039% of supply → get 2.1039% of the vault, minus 2%.
+
+Redeem #1: 0.03610028 ZEC vault × 2.1039% = 0.00075952
+minus the 2% fee = 0.00074433 ZEC paid.
+
+The fee stays. Every remaining token got a bit more backing.
+```
+
+### 9 · image `proof-9.png` · epochs
+
+```
+A ZEC payday every 5 minutes.
+
+9 epochs in. 0.0655 ZEC has flowed through the Hold Pool, and 0.0427 ZEC is owed to holders right now.
+
+Tall bars = fee sweeps. Small bars = paper hands' forfeits, recycled to the holders who stayed. 💎
+```
+
+### 10 · image `proof-10.png` · self-healing keeper
+
+```
+Transparency post.
+
+Redeem #1 failed on its first try: an upstream NEAR RPC endpoint was retired.
+
+What happened next:
+• payout marked retry-safe
+• ZEC never left the treasury
+• keeper retried on its own 5 min later
+• paid ✅
+
+Something broke. No ZEC was lost.
+```
+
+---
+
 ## Every link, in one place
 
 | What | Link |

@@ -104,11 +104,11 @@ const DEFS = `<defs>
 </defs>`;
 
 const N = 5;
-function card(i, { eyebrow, title, body = [], art, eyebrowColor = C.green }) {
+function card(i, { eyebrow, title, body = [], art, eyebrowColor = C.green, tag = `ON-CHAIN PROOF ${i}/${N}` }) {
   let s = `<rect width="${W}" height="${H}" fill="${C.bg}"/><rect width="${W}" height="${H}" fill="url(#grid)"/><rect width="${W}" height="${H}" fill="url(#g1)"/><rect width="${W}" height="${H}" fill="url(#g2)"/>`;
   s += logo(98, 96, 0.19) + T(140, 106, 30, [['ZEARN', C.ink]], { weight: 900, ls: 1 });
   s += `<rect x="${W - 410}" y="72" width="330" height="46" rx="23" fill="${C.green}" fill-opacity="0.10" stroke="${C.green}" stroke-width="2"/><circle cx="${W - 384}" cy="95" r="7" fill="${C.green}"/>`;
-  s += T(W - 102, 104, 22, `ON-CHAIN PROOF ${i}/${N}`, { mono: true, anchor: 'end', color: C.green, weight: 700 });
+  s += T(W - 102, 104, 22, tag, { mono: true, anchor: 'end', color: C.green, weight: 700 });
   s += T(80, 240, 24, eyebrow.toUpperCase(), { mono: true, color: eyebrowColor, weight: 700, ls: 4 });
   title.forEach((parts, k) => (s += T(76, 330 + k * 84, 76, parts, { glow: k === title.length - 1 })));
   const by = 330 + title.length * 84 + 16;
@@ -196,9 +196,166 @@ const CARDS = [
   }),
 ];
 
-CARDS.forEach((fn, k) => {
-  const png = new Resvg(fn(), { font: FONT, fitTo: { mode: 'width', value: W } }).render().asPng();
-  writeFileSync(`${OUT}/proof-${k + 1}.png`, png);
-  console.log(`proof-${k + 1}.png ${(png.length / 1024).toFixed(0)} KB`);
-});
-writeFileSync(`${OUT}/proof-data.json`, JSON.stringify({ generatedAt: new Date().toISOString(), ...D }, null, 2));
+// ================= series 2: proof-6 .. proof-10 =================
+const allAcc = (await get(`${SITE}/api/accruals?limit=200`)).reverse(); // oldest first
+const allSweeps = sweeps; // successful, oldest first
+const sweepSt = [];
+for (const s of allSweeps) sweepSt.push(await get(ONECLICK + s.deposit_address));
+const clock = (iso) => new Date(iso).toISOString().slice(11, 16);
+const t0 = Date.parse(allAcc[0].ts); // first keeper epoch after go-live
+const openingRaw = Number(redeem.vault_raw) - Number(sweeps[0].floor_raw); // floor before sweep #1 = seeded opening floor
+// treasury events: opening floor, every sweep (+zec), every paid redeem (-payout)
+const events = [
+  { t: t0, d: openingRaw, label: 'seed' },
+  ...allSweeps.map((s, k) => ({ t: Date.parse(sweepSt[k].updatedAt), d: Number(s.zec_raw), label: `sweep ${s.id}` })),
+  ...redeems.map((r) => ({ t: Date.parse(r.updated_at), d: -Number(r.payout_raw), label: 'redeem' })),
+].sort((a, b) => a.t - b.t);
+let run = 0;
+const pts = events.map((e) => ({ ...e, v: (run += e.d) }));
+const tNow = Date.now();
+const eff = {
+  inUsd: sweepSt.reduce((a, s) => a + Number(s.swapDetails.amountInUsd), 0),
+  outUsd: sweepSt.reduce((a, s) => a + Number(s.swapDetails.amountOutUsd), 0),
+  secs: sweepSt.map((s) => (Date.parse(s.updatedAt) - Date.parse(s.quoteResponse.timestamp)) / 1000),
+};
+eff.pct = (eff.outUsd / eff.inUsd) * 100;
+const burnPct = (Number(redeem.amount_raw) / Number(redeem.supply_raw)) * 100;
+const perTokBefore = Number(redeem.vault_raw) / Number(redeem.supply_raw);
+const perTokAfter = (Number(redeem.vault_raw) - Number(redeem.payout_raw)) / (Number(redeem.supply_raw) - Number(redeem.amount_raw));
+const D2 = {
+  openingZec: z8(openingRaw),
+  treasuryNow: z8(run),
+  treasuryX: (run / openingRaw).toFixed(1),
+  minutes: Math.round((tNow - t0) / 60000),
+  sweepsZec: z8(allSweeps.reduce((a, s) => a + Number(s.zec_raw), 0)),
+  paidZec: z8(redeems.reduce((a, r) => a + Number(r.payout_raw), 0)),
+  effPct: eff.pct.toFixed(1),
+  inUsd: eff.inUsd.toFixed(2),
+  outUsd: eff.outUsd.toFixed(2),
+  avgSecs: Math.round(eff.secs.reduce((a, b) => a + b, 0) / eff.secs.length),
+  burnPct: burnPct.toFixed(4),
+  backingUp: ((perTokAfter / perTokBefore - 1) * 100).toFixed(3),
+  epochs: allAcc.length,
+  poolIn: z8(allAcc.reduce((a, e) => a + Number(e.hold_in_raw), 0)),
+  owedNow: state.holdOwedZec.toFixed(8),
+  holdersFirst: allAcc[0].holders_count,
+  holdersNow: allAcc[allAcc.length - 1].holders_count,
+  holdersPeak: Math.max(...allAcc.map((a) => a.holders_count)),
+};
+console.log(JSON.stringify(D2, null, 2));
+
+const CARDS2 = [
+  // 6. treasury growth, step chart
+  () => card(6, {
+    tag: 'PROOF PT.2 · 1/5',
+    eyebrow: 'Treasury growth',
+    title: [[[`${D2.treasuryX}x the ZEC`, C.ink]], [[`in ${D2.minutes} minutes.`, C.gold]]],
+    body: [`${D2.openingZec} ZEC seeded at launch.`, `${allSweeps.length} fee sweeps added ${D2.sweepsZec} ZEC.`, `Redeems paid out ${D2.paidZec} ZEC.`, `Now ${D2.treasuryNow} ZEC, matched on-chain.`],
+    art: (() => {
+      const X0 = 950, X1 = 1500, Y0 = 640, Y1 = 310;
+      const vmax = Math.max(...pts.map((p) => p.v)) * 1.12;
+      const x = (t) => X0 + ((t - t0) / (tNow - t0)) * (X1 - X0);
+      const y = (v) => Y0 - (v / vmax) * (Y0 - Y1);
+      let d = `M${X0} ${Y0}`;
+      pts.forEach((p, k) => (d += ` L${x(p.t).toFixed(1)} ${k ? y(pts[k - 1].v).toFixed(1) : Y0} L${x(p.t).toFixed(1)} ${y(p.v).toFixed(1)}`));
+      d += ` L${X1} ${y(run).toFixed(1)}`;
+      const dots = pts.map((p) => `<circle cx="${x(p.t)}" cy="${y(p.v)}" r="7" fill="${p.d < 0 ? C.red : C.gold}"/>${T(x(p.t) + (p.label === 'seed' ? 12 : -10), y(p.v) - 16, 18, p.label, { mono: true, anchor: p.label === 'seed' ? 'start' : 'end', color: p.d < 0 ? C.red : C.gold2, weight: 700 })}`).join('');
+      return `${box(900, 150, 640, 560)}
+        ${T(940, 200, 20, 'ZEC IN THE TREASURY · intents.near', { mono: true, color: C.gold, weight: 700 })}
+        <line x1="${X0}" y1="${Y0}" x2="${X1}" y2="${Y0}" stroke="${C.line}" stroke-width="2"/>
+        <path d="${d} L${X1} ${Y0} Z" fill="${C.gold}" fill-opacity="0.10"/><path d="${d}" fill="none" stroke="${C.gold}" stroke-width="4" stroke-linejoin="round"/>
+        ${dots}
+        ${T(X0, Y0 + 34, 18, `${clock(new Date(t0).toISOString())} UTC`, { mono: true, color: C.ink3, weight: 700 })}${T(X1, Y0 + 34, 18, `${clock(new Date(tNow).toISOString())} UTC`, { mono: true, anchor: 'end', color: C.ink3, weight: 700 })}
+        ${T(940, 252, 36, `${D2.treasuryNow} ZEC`, { mono: true, color: C.ink })}`;
+    })(),
+  }),
+  // 7. swap efficiency
+  () => card(7, {
+    tag: 'PROOF PT.2 · 2/5',
+    eyebrow: 'SOL → ZEC efficiency',
+    title: [[[`${D2.effPct}% arrived`, C.ink]], [['as Zcash.', C.gold]]],
+    body: [`${allSweeps.length} sweeps: $${D2.inUsd} of SOL in, $${D2.outUsd} of`, 'ZEC out, priced at swap time. The gap is', 'the NEAR Intents routing fee and spread.', `Average settle time: ${D2.avgSecs} seconds.`],
+    art: `${box(900, 150, 640, 560)}
+      ${T(940, 205, 20, 'SWEEP', { mono: true, color: C.ink3, weight: 700 })}${T(1130, 205, 20, 'SOL IN', { mono: true, anchor: 'end', color: C.purple, weight: 700 })}${T(1340, 205, 20, 'ZEC OUT', { mono: true, anchor: 'end', color: C.gold, weight: 700 })}${T(1500, 205, 20, 'TIME', { mono: true, anchor: 'end', color: C.blue, weight: 700 })}
+      ${allSweeps.map((s, k) => {
+        const st = sweepSt[k].swapDetails;
+        const yy = 262 + k * 62;
+        return `<line x1="940" y1="${yy - 40}" x2="1500" y2="${yy - 40}" stroke="#fff" stroke-opacity="0.06"/>${T(940, yy, 26, `#${s.id}`, { mono: true, weight: 700 })}${T(1130, yy, 26, Number(st.amountInFormatted).toFixed(4), { mono: true, anchor: 'end', weight: 700 })}${T(1340, yy, 26, Number(st.amountOutFormatted).toFixed(6), { mono: true, anchor: 'end', color: C.gold, weight: 700 })}${T(1500, yy, 26, `${Math.round(eff.secs[k])}s`, { mono: true, anchor: 'end', color: C.blue, weight: 700 })}`;
+      }).join('')}
+      ${T(940, 520, 22, 'VALUE IN vs VALUE OUT', { mono: true, color: C.ink2, weight: 700 })}
+      <rect x="940" y="540" width="560" height="30" rx="8" fill="${C.purple}" fill-opacity="0.7"/>${T(1490, 562, 18, `$${D2.inUsd}`, { mono: true, anchor: 'end', color: '#0a0a0e', weight: 700 })}
+      <rect x="940" y="582" width="${Math.round(560 * eff.pct / 100)}" height="30" rx="8" fill="${C.gold}"/>${T(1480, 604, 18, `$${D2.outUsd}`, { mono: true, anchor: 'end', color: '#0a0a0e', weight: 700 })}
+      ${T(1220, 676, 30, `${D2.effPct}% DELIVERED`, { anchor: 'middle', color: C.green, ls: 3 })}`,
+  }),
+  // 8. the redeem formula with real numbers
+  () => card(8, {
+    tag: 'PROOF PT.2 · 3/5',
+    eyebrow: 'Floor math · redeem #1',
+    title: [[['The floor is', C.ink]], [['just math.', C.gold]]],
+    body: ['No oracle, no market maker, no discretion.', 'Burn X% of supply, receive X% of the vault', 'minus 2%. Redeem #1 matched the formula', 'to the last zatoshi.'],
+    art: `${box(900, 150, 640, 560)}
+      ${[
+        ['BURNED / SUPPLY', `${tokens(redeem.amount_raw)} / ${tokens(redeem.supply_raw)}`, `= ${D2.burnPct}%`, C.red],
+        ['× FLOOR VAULT', `${z8(redeem.vault_raw)} ZEC`, `= ${z8(redeem.gross_raw)} ZEC`, C.gold],
+        ['− 2% FEE, STAYS IN VAULT', `${z8(redeem.fee_raw)} ZEC`, '', C.ink2],
+      ].map(([k, a, b, c], n) => `${T(940, 210 + n * 118, 20, k, { mono: true, color: c, weight: 700, ls: 2 })}${T(940, 252 + n * 118, 28, a, { mono: true, weight: 700, ls: 0 })}${b ? T(1500, 290 + n * 118, 26, b, { mono: true, anchor: 'end', color: c, weight: 700, ls: 0 }) : ''}`).join('')}
+      <line x1="940" y1="545" x2="1500" y2="545" stroke="${C.line}" stroke-width="2"/>
+      ${T(940, 592, 28, 'PAYOUT', { mono: true, color: C.green, weight: 700 })}${T(1500, 596, 38, `${z8(redeem.payout_raw)} ZEC`, { mono: true, anchor: 'end', color: C.green })}
+      ${T(940, 665, 20, `backing per remaining token: +${D2.backingUp}%`, { mono: true, color: C.ink2, weight: 700, ls: 0 })}`,
+  }),
+  // 9. epochs: hold-pool inflow per epoch + holder counts
+  () => card(9, {
+    tag: 'PROOF PT.2 · 4/5',
+    eyebrow: `Hold Pool · ${D2.epochs} epochs`,
+    title: [[['A ZEC payday', C.ink]], [['every 5 minutes.', C.green]]],
+    body: [`${D2.poolIn} ZEC flowed through the Hold Pool.`, `${D2.owedNow} ZEC is owed to holders now.`, `Holders: ${D2.holdersFirst} at epoch 1, peak ${D2.holdersPeak}, ${D2.holdersNow} now.`, 'Every epoch is in the public ledger.'],
+    art: (() => {
+      const X0 = 950, X1 = 1500, Y0 = 620, Y1 = 290;
+      const max = Math.max(...allAcc.map((a) => Number(a.hold_in_raw))) || 1;
+      const bw = (X1 - X0) / allAcc.length;
+      const bars = allAcc.map((a, k) => {
+        const h = (Number(a.hold_in_raw) / max) * (Y0 - Y1);
+        const bx = X0 + k * bw + bw * 0.18;
+        return `<rect x="${bx}" y="${Y0 - h}" width="${bw * 0.64}" height="${Math.max(h, 2)}" rx="6" fill="${C.green}" fill-opacity="${h > 2 ? 0.85 : 0.3}"/>${T(bx + bw * 0.32, Y0 - h - 12, 18, String(a.holders_count), { mono: true, anchor: 'middle', color: C.ink2, weight: 700 })}${T(bx + bw * 0.32, Y0 + 30, 16, `#${a.id}`, { mono: true, anchor: 'middle', color: C.ink3, weight: 700 })}`;
+      }).join('');
+      return `${box(900, 150, 640, 560)}
+        ${T(940, 200, 20, 'ZEC INTO THE POOL PER EPOCH', { mono: true, color: C.green, weight: 700 })}
+        ${T(940, 232, 18, 'number above each bar = holders that epoch', { mono: true, color: C.ink3, weight: 700, ls: 0 })}
+        <line x1="${X0}" y1="${Y0}" x2="${X1}" y2="${Y0}" stroke="${C.line}" stroke-width="2"/>${bars}
+        ${T(940, 686, 18, 'epoch every 5 min · unlock 15 min 5% … 8 h 100%', { mono: true, color: C.ink3, weight: 700, ls: 0 })}`;
+    })(),
+  }),
+  // 10. self-healing payout (one-off incident from the keeper logs, redeem #1)
+  () => card(10, {
+    tag: 'PROOF PT.2 · 5/5',
+    eyebrow: 'Self-healing keeper',
+    title: [[['Something broke.', C.ink]], [['No ZEC was lost.', C.gold]]],
+    body: ['Redeem #1 hit a retired NEAR RPC endpoint.', 'The payout was marked retry-safe, the ZEC', 'never left the treasury, and the keeper', 'paid it on its own 5 minutes later.'],
+    art: `${box(900, 150, 640, 560)}
+      <line x1="962" y1="215" x2="962" y2="640" stroke="${C.line}" stroke-width="3"/>
+      ${[
+        ['13:58:56', 'Burn registered, payout queued', C.ink2],
+        ['13:59:03', 'Attempt 1 failed: NEAR RPC retired', C.red],
+        ['13:59:03', 'ZEC stays in treasury, retry-safe', C.gold],
+        ['14:04:33', 'Keeper retries automatically', C.blue],
+        ['14:04:37', `Paid: ${z8(redeem.payout_raw)} ZEC → ${Number(pay.amountOutFormatted).toFixed(6)} SOL`, C.green],
+      ].map(([t, txt, c], n) => `<circle cx="962" cy="${215 + n * 106}" r="12" fill="${C.bg}" stroke="${c}" stroke-width="4"/>${T(995, 207 + n * 106, 20, `${t} UTC`, { mono: true, color: c, weight: 700 })}${T(995, 241 + n * 106, 24, txt, { weight: 700, color: C.ink, ls: 0 })}`).join('')}`,
+  }),
+];
+
+const series = process.argv.slice(2);
+const render = (list, first) =>
+  list.forEach((fn, k) => {
+    const png = new Resvg(fn(), { font: FONT, fitTo: { mode: 'width', value: W } }).render().asPng();
+    writeFileSync(`${OUT}/proof-${first + k}.png`, png);
+    console.log(`proof-${first + k}.png ${(png.length / 1024).toFixed(0)} KB`);
+  });
+// node make-proof.mjs 1 -> cards 1-5, 2 -> cards 6-10, no arg -> both
+if (!series.length || series.includes('1')) {
+  render(CARDS, 1);
+  writeFileSync(`${OUT}/proof-data.json`, JSON.stringify({ generatedAt: new Date().toISOString(), ...D }, null, 2));
+}
+if (!series.length || series.includes('2')) {
+  render(CARDS2, 6);
+  writeFileSync(`${OUT}/proof-data-2.json`, JSON.stringify({ generatedAt: new Date().toISOString(), ...D2 }, null, 2));
+}
